@@ -4,6 +4,32 @@ from kivy.app import App
 from kivy.core.audio import SoundLoader
 from kivy.uix.listview import ListItemButton
 from kivy.properties import ListProperty, NumericProperty
+import requests
+import vlc
+from time import sleep
+import random
+from os import  listdir, path
+
+rpi = False
+if rpi:
+    i = vlc.Instance('--aout=alsa', '--alsa-audio-device=dmixer')
+else:
+    i = vlc.Instance()
+
+medialist = i.media_list_new()
+p = i.media_list_player_new()
+pl = i.media_player_new()
+p.set_media_player(pl)
+
+if rpi:
+    basepath = '/home/pi/sound/Audio/'
+else:
+    basepath = '/home/juan/Musique/'
+    #  basepath= '/home/Gemeinsame Dateien/Audio/'
+
+playlists = set(['pls','m3u'])
+medias = []
+Instance = vlc.Instance()
 
 Builder.load_string('''
 #:import la kivy.adapters.listadapter
@@ -31,10 +57,6 @@ Builder.load_string('''
                 allow_empty_selection=True,
                 args_converter=root.args_converter)
 
-        BoxLayout:
-            size_hint:(.1, None)
-            Button:
-                text: 'atlas'
 
 
 <Page>:
@@ -43,7 +65,8 @@ Builder.load_string('''
             size_hint:(.1, None)
             Button:
                 text: 'MENU'
-                on_press: root.manager.current = 'menu'
+                on_press:
+                    app.stop_and_return()
         BoxLayout:
             orientation:'vertical'
             Button:
@@ -51,26 +74,25 @@ Builder.load_string('''
                 text:'Title'
                 size_hint:(1, .2)
             Image:
-                source: '/home/juan/Images/Capture du 2015-12-30 11:23:20.png'
+                source: 'carrousel_fictions132.png'
                 size_hint:(1, .8)
-        BoxLayout:
-            size_hint:(.1, None)
 
-            Button:
-                text: 'atlas'
 ''')
 
 class MenuButton(ListItemButton):
     index = NumericProperty(0)
 
-class MenuPage(Screen):
-    M = SoundLoader.load('/usr/share/sounds/ubuntu/stereo/bell.ogg')
 
-    def plays(self):
-        if MenuPage.M.state == 'stop':
-            MenuPage.M.play()
-        else:
-            MenuPage.M.stop()
+class MenuPage(Screen):
+    # M = SoundLoader.load('/usr/share/sounds/ubuntu/stereo/bell.ogg')
+    M = SoundLoader.load('http://stream.srg-ssr.ch/m/rsj/mp3_128')
+
+    def plays(self,url):
+        if not MenuPage.M is None:
+            if MenuPage.M.state == 'stop':
+                MenuPage.M.play()
+            else:
+                MenuPage.M.stop()
 
     def args_converter(self, row_index, title):
         print ("{0}={1}".format(row_index, title))
@@ -80,24 +102,52 @@ class MenuPage(Screen):
             'text': title
         }
 
+    def stop_and_return(self):
+        self.root.current = 'main'
+
 class Page(Screen):
     pass
 
+
 class TestApp(App):
-    data = ListProperty(["Item #{0}".format(i) for i in range(50)])
+    data = medialist
 
     def build(self):
         sm = ScreenManager()
         self.menu = MenuPage(name='menu')
         sm.add_widget(self.menu)
-        for i in range(50):
+        for i, media in enumerate(medialist) :
+
             name = Page(name=str(i))
-            sm.add_widget(name)
+            sm.add_widget(media)
         return sm
 
     def on_menu_selection(self, index):
         self.root.current = str(index)
-        self.menu.plays()
+        self.menu.plays(medialist[index])
+
+    def stop_and_return(self):
+        self.root.current = 'menu'
 
 if __name__ == '__main__':
+    # create a list of medias
+
+    medias.append("http://stream.srg-ssr.ch/m/rsj/mp3_128")
+    medias.append("http://streaming.radio.funradio.fr/fun-1-48-192")
+    medias.append("http://streaming.radio.rtl2.fr/rtl2-1-44-128")
+    medias.append("http://stream.srg-ssr.ch/m/couleur3/mp3_128")
+    tmp = 4
+    for f in listdir(basepath):
+        if f.lower().endswith('.mp3'):
+            tmp += 1
+            url = path.join(basepath, f)
+            medias.append(url)
+    # shuffle it
+    random.shuffle(medias)
+
+    # create a vlc medial list from the shuffled list
+    for url in medias:
+        item = i.media_new(url)
+        medialist.add_media(item.get_mrl())
+
     TestApp().run()
