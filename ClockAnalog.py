@@ -20,11 +20,14 @@ kv = '''
 <MyClockWidget>:
     face: face
     ticks: ticks
+    Button:
+        text: 'Left button?'
     FloatLayout:
         id: face
         size_hint: None, None
         pos_hint: {"center_x":0.5, "center_y":0.5}
         size: 0.7*min(root.size), 0.7*min(root.size)
+
         canvas:
             Color:
                 rgb: 0.3, 0.3, 0.3
