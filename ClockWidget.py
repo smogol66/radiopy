@@ -28,16 +28,19 @@ class Ticks(Widget):
         self.canvas.clear()
         with self.canvas:
             time = datetime.datetime.now()
-            Color(0.9, 0.5, 0.2)
-            sec_radius=0.8
-            Line(points=[self.center_x, self.center_y, self.center_x+sec_radius*self.r*sin(pi/30*time.second), self.center_y+sec_radius*self.r*cos(pi/30*time.second)], width=1, cap="round")
-            Color(0.5, 0.6, 0.3)
-            min_radius=0.7
-            Line(points=[self.center_x, self.center_y, self.center_x+min_radius*self.r*sin(pi/30*time.minute), self.center_y+min_radius*self.r*cos(pi/30*time.minute)], width=2, cap="round")
-            Color(0.4, 0.7, 0.4)
-            hour_radius=0.5
+            Color(0.25, 0.25, 0.25, .9)
+            hour_radius=0.7
             th = time.hour*60 + time.minute
-            Line(points=[self.center_x, self.center_y, self.center_x+hour_radius*self.r*sin(pi/360*th), self.center_y+hour_radius*self.r*cos(pi/360*th)], width=3, cap="round")
+            Line(points=[self.center_x, self.center_y, self.center_x+hour_radius*self.r*sin(pi/360*th),
+                         self.center_y+hour_radius*self.r*cos(pi/360*th)], width=5, cap="round")
+            Color(0.35, .35, 0.35, 1)
+            min_radius=1
+            Line(points=[self.center_x, self.center_y, self.center_x+min_radius*self.r*sin(pi/30*time.minute),
+                         self.center_y+min_radius*self.r*cos(pi/30*time.minute)], width=4, cap="round")
+            Color(0.9, 0.2, 0.2,0.7)
+            sec_radius=1.06
+            Line(points=[self.center_x, self.center_y, self.center_x+sec_radius*self.r*sin(pi/30*time.second),
+                         self.center_y+sec_radius*self.r*cos(pi/30*time.second)], width=2, cap="round")
 
 Builder.load_file('MyClock.kv')
 
