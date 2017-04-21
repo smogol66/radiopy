@@ -34,15 +34,17 @@ class Ticks(Widget):
             SmoothLine(points=[self.center_x, self.center_y, self.center_x+hour_radius*self.r*sin(pi/360*th),
                          self.center_y+hour_radius*self.r*cos(pi/360*th)], width=5, cap="round",
                        overdraw_width=1.6)
-            Color(0.45, .45, 0.45)
+            Color(0.35, .35, 0.35)
             min_radius=1
-            SmoothLine(points=[self.center_x, self.center_y, self.center_x+min_radius*self.r*sin(pi/30*time.minute),
-                         self.center_y+min_radius*self.r*cos(pi/30*time.minute)], width=4, cap="round",
+            tm = time.minute + time.second/60.0
+            SmoothLine(points=[self.center_x, self.center_y, self.center_x+min_radius*self.r*sin(pi/30*tm),
+                         self.center_y+min_radius*self.r*cos(pi/30*tm)], width=4, cap="round",
                        overdraw_width=1.6)
             Color(0.8, 0.2, 0.2)
             sec_radius=1.06
-            SmoothLine(points=[self.center_x, self.center_y, self.center_x+sec_radius*self.r*sin(pi/30*time.second),
-                         self.center_y+sec_radius*self.r*cos(pi/30*time.second)], width=2, cap="round",
+            ts = time.second+time.microsecond / 1000000.0
+            SmoothLine(points=[self.center_x, self.center_y, self.center_x+sec_radius*self.r*sin(pi/30*ts),
+                         self.center_y+sec_radius*self.r*cos(pi/30*ts)], width=2, cap="round",
                        overdraw_width=1.6)
 
 Builder.load_file('MyClock.kv')
@@ -50,7 +52,7 @@ Builder.load_file('MyClock.kv')
 class MyClockApp(App):
     def build(self):
         clock = MyClockWidget()
-        Clock.schedule_interval(clock.ticks.update_clock, 1)
+        Clock.schedule_interval(clock.ticks.update_clock, 0.1)
         return clock
 
 if __name__ == '__main__':
