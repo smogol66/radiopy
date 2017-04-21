@@ -2,7 +2,7 @@ import kivy
 kivy.require('1.0.5')
 from kivy.app import App
 from kivy.uix.widget import Widget
-from kivy.graphics import Color, Line
+from kivy.graphics import Color, Line, SmoothLine
 from kivy.uix.floatlayout import FloatLayout
 from math import cos, sin, pi
 from kivy.clock import Clock
@@ -28,19 +28,22 @@ class Ticks(Widget):
         self.canvas.clear()
         with self.canvas:
             time = datetime.datetime.now()
-            Color(0.25, 0.25, 0.25, .9)
+            Color(0.25, 0.25, 0.25)
             hour_radius=0.7
             th = time.hour*60 + time.minute
-            Line(points=[self.center_x, self.center_y, self.center_x+hour_radius*self.r*sin(pi/360*th),
-                         self.center_y+hour_radius*self.r*cos(pi/360*th)], width=5, cap="round")
-            Color(0.35, .35, 0.35, 1)
+            SmoothLine(points=[self.center_x, self.center_y, self.center_x+hour_radius*self.r*sin(pi/360*th),
+                         self.center_y+hour_radius*self.r*cos(pi/360*th)], width=5, cap="round",
+                       overdraw_width=1.6)
+            Color(0.45, .45, 0.45)
             min_radius=1
-            Line(points=[self.center_x, self.center_y, self.center_x+min_radius*self.r*sin(pi/30*time.minute),
-                         self.center_y+min_radius*self.r*cos(pi/30*time.minute)], width=4, cap="round")
-            Color(0.9, 0.2, 0.2,0.7)
+            SmoothLine(points=[self.center_x, self.center_y, self.center_x+min_radius*self.r*sin(pi/30*time.minute),
+                         self.center_y+min_radius*self.r*cos(pi/30*time.minute)], width=4, cap="round",
+                       overdraw_width=1.6)
+            Color(0.8, 0.2, 0.2)
             sec_radius=1.06
-            Line(points=[self.center_x, self.center_y, self.center_x+sec_radius*self.r*sin(pi/30*time.second),
-                         self.center_y+sec_radius*self.r*cos(pi/30*time.second)], width=2, cap="round")
+            SmoothLine(points=[self.center_x, self.center_y, self.center_x+sec_radius*self.r*sin(pi/30*time.second),
+                         self.center_y+sec_radius*self.r*cos(pi/30*time.second)], width=2, cap="round",
+                       overdraw_width=1.6)
 
 Builder.load_file('MyClock.kv')
 
