@@ -1,11 +1,10 @@
 import kivy
-kivy.require('1.0.5')
-from kivy.uix.screenmanager import ScreenManager, Screen, SwapTransition
 from kivy.uix.listview import ListItemButton
+from kivy.uix.screenmanager import ScreenManager, Screen, SwapTransition
 from kivy.properties import ListProperty, NumericProperty, StringProperty
 from kivy.app import App
 from kivy.uix.widget import Widget
-from kivy.graphics import Color, Line, SmoothLine
+from kivy.graphics import Color, SmoothLine
 from kivy.uix.floatlayout import FloatLayout
 from math import cos, sin, pi
 from kivy.clock import Clock
@@ -13,17 +12,16 @@ from kivy.lang import Builder
 import vlc
 from os import listdir, path
 import datetime
-
 from kivy.config import Config
+try:
+    import RPi.GPIO
+    rpi = True
+except ImportError:
+    rpi = False
+
+kivy.require('1.0.5')
 Config.set('graphics', 'width', '800')
 Config.set('graphics', 'height', '480')
-
-rpi = False
-try:
-  import RPi.GPIO as gpio
-  rpi = True
-except ImportError:
-  rpi = False
 
 if rpi:
     Instance = vlc.Instance('--aout=alsa', '--alsa-audio-device=dmixer')
@@ -34,9 +32,8 @@ if rpi:
     basepath = '/home/pi/sound/Audio/'
 else:
     basepath = '/home/Gemeinsame Dateien/Audio'
-    #  basepath= '/home/Gemeinsame Dateien/Audio/'
 
-medias = []
+medias = list()
 medias.append("http://stream.srg-ssr.ch/m/rsj/mp3_128")
 medias.append("http://streaming.radio.funradio.fr/fun-1-48-192")
 medias.append("http://streaming.radio.rtl2.fr/rtl2-1-44-128")
@@ -46,7 +43,7 @@ tmp = 4
 for f in listdir(basepath):
     if f.lower().endswith('.mp3'):
         tmp += 1
-        url = path.join(basepath,f)
+        url = path.join(basepath, f)
         medias.append(url)
 
 media_list = Instance.media_list_new()
@@ -54,7 +51,7 @@ player = Instance.media_player_new()
 list_player = Instance.media_list_player_new()
 list_player.set_media_player(player)
 
-#create a vlc medial list from the medias
+# create a vlc medial list from the medias
 for url in medias:
     item = Instance.media_new(url)
     media_list.add_media(item.get_mrl())
@@ -63,12 +60,13 @@ list_player.set_media_list(media_list)
 
 Builder.load_file('kivyListview.kv')
 
+
 class MyClockWidget(FloatLayout):
     def do_press(self):
-        self.ids.label.text='pressed'
+        self.ids.label.text = 'pressed'
 
     def do_release(self):
-        self.ids.label.text=''
+        self.ids.label.text = ''
 
 
 class Ticks(Widget):
@@ -82,31 +80,31 @@ class Ticks(Widget):
         with self.canvas:
             time = datetime.datetime.now()
             Color(0.25, 0.25, 0.25)
-            hour_radius=0.7
-            th = time.hour*60 + time.minute
+            hour_radius = 0.7
+            th = time.hour * 60 + time.minute
             SmoothLine(points=[self.center_x, self.center_y, self.center_x+hour_radius*self.r*sin(pi/360*th),
-                         self.center_y+hour_radius*self.r*cos(pi/360*th)], width=5, cap="round",
+                       self.center_y+hour_radius*self.r*cos(pi/360*th)], width=5, cap="round",
                        overdraw_width=1.6)
             Color(0.35, .35, 0.35)
-            min_radius=1
-            tm = time.minute + time.second/60.0
+            min_radius = 1
+            tm = time.minute + time.second / 60.0
             SmoothLine(points=[self.center_x, self.center_y, self.center_x+min_radius*self.r*sin(pi/30*tm),
-                         self.center_y+min_radius*self.r*cos(pi/30*tm)], width=4, cap="round",
+                       self.center_y+min_radius*self.r*cos(pi/30*tm)], width=4, cap="round",
                        overdraw_width=1.6)
             Color(0.8, 0.2, 0.2)
-            sec_radius=1.06
+            sec_radius = 1.06
             ts = time.second+time.microsecond / 1000000.0
             SmoothLine(points=[self.center_x, self.center_y, self.center_x+sec_radius*self.r*sin(pi/30*ts),
-                         self.center_y+sec_radius*self.r*cos(pi/30*ts)], width=2, cap="round",
+                       self.center_y+sec_radius*self.r*cos(pi/30*ts)], width=2, cap="round",
                        overdraw_width=1.6)
 
 
 class ClockScreen(Screen):
     def do_press(self):
-        self.ids.label.text='pressed'
+        self.ids.label.text = 'pressed'
 
     def do_release(self):
-        self.ids.label.text=''
+        self.ids.label.text = ''
 
 
 class MenuButton(ListItemButton):
@@ -115,7 +113,7 @@ class MenuButton(ListItemButton):
 
 class MenuPageScreen(Screen):
 
-    def plays(self,index):
+    def plays(self, index):
         pass
 
     def args_converter(self, row_index, title):
@@ -125,16 +123,17 @@ class MenuPageScreen(Screen):
             'text': names[-1]
         }
 
+
 class PageScreen(Screen):
     labelImage = StringProperty('img/pause.png')
     index = NumericProperty(0)
     songTitle = StringProperty(' ')
     songArtist = StringProperty(' ')
     playVolume = NumericProperty(100)
-    time_elasped = StringProperty('00:00')
+    time_elapsed = StringProperty('00:00')
     song_progress = NumericProperty(0)
     last_index = 0
-    duration=0
+    duration = 0
     schedule = None
     SCHEDULE_DELAY = 0.5
     media = None
@@ -158,20 +157,20 @@ class PageScreen(Screen):
     def plays(self):
         if player.is_playing():
             player.pause()
-            self.labelImage='img/play.png'
+            self.labelImage = 'img/play.png'
             Clock.unschedule(self.schedule)
-            self.schedule= None
+            self.schedule = None
         else:
             player.play()
-            self.labelImage='img/pause.png'
+            self.labelImage = 'img/pause.png'
             self.schedule = Clock.schedule_interval(self.update_time, self.SCHEDULE_DELAY)
 
     def prev_song(self):
         self.index -= 1
         if self.index < 0:
             self.index = len(medias)-1
-        self.last_index=-1
-        self.song_progress=0
+        self.last_index = -1
+        self.song_progress = 0
         self.on_pre_enter()
 
     def next_song(self):
@@ -190,6 +189,7 @@ class PageScreen(Screen):
         if self.media is None:
             self.media = player.get_media()
             self.media.parse()
+
         if self.media.is_parsed():
             try:
                 self.songTitle = ''
@@ -201,12 +201,9 @@ class PageScreen(Screen):
             except:
                 pass  # do not print nothing
             self.duration = self.media.get_duration()
-            m, s = divmod(self.duration / 1000, 60)
-            h, m = divmod(m, 60)
-
             self.media = None
 
-        if self.duration!=0:
+        if self.duration != 0:
             diff = self.duration - player.get_time()
             progress = player.get_time() / float(self.duration) * 100.0
         else:
@@ -224,26 +221,26 @@ class PageScreen(Screen):
 
         m, s = divmod(diff / 1000, 60)
         h, m = divmod(m, 60)
-        if h==0:
-            self.time_elasped = "{:02d}:{:02d}".format(m, s)
+        if h == 0:
+            self.time_elapsed = "{:02d}:{:02d}".format(m, s)
         else:
-            self.time_elasped="{:02d}:{:02d}:{:02d}".format(h, m, s)
+            self.time_elapsed = "{:02d}:{:02d}:{:02d}".format(h, m, s)
         if not list_player.is_playing():
             self.next_song()
 
 
-
 class TestApp(App):
-    data = ListProperty(medias)
+    data = ListProperty()
     playScreen = None
     menuScreen = None
     clockScreen = None
     last_index = -1
 
     def build(self):
-        sm = ScreenManager(transition=SwapTransition (direction='right'))
+        sm = ScreenManager(transition=SwapTransition(direction='right'))
         self.menuScreen = MenuPageScreen(name='menu')
         sm.add_widget(self.menuScreen)
+        self.data = medias
         self.playScreen = PageScreen(name='play')
         self.playScreen.index = 0
 
@@ -272,8 +269,6 @@ class TestApp(App):
 
     def show_player(self):
         self.root.current = 'play'
-
-
 
 if __name__ == '__main__':
     TestApp().run()
