@@ -41,14 +41,13 @@ medias.append("http://stream.srg-ssr.ch/m/rsj/mp3_128")
 medias.append("http://streaming.radio.funradio.fr/fun-1-48-192")
 medias.append("http://streaming.radio.rtl2.fr/rtl2-1-44-128")
 medias.append("http://stream.srg-ssr.ch/m/couleur3/mp3_128")
-print('I am here '+ basepath)
+
 tmp = 4
 for f in listdir(basepath):
     if f.lower().endswith('.mp3'):
         tmp += 1
         url = path.join(basepath,f)
         medias.append(url)
-        # print(url)
 
 media_list = Instance.media_list_new()
 player = Instance.media_player_new()
@@ -120,7 +119,6 @@ class MenuPageScreen(Screen):
         pass
 
     def args_converter(self, row_index, title):
-        print ("{0}={1}".format(row_index, title))
         names = title.split('/')
         return {
             'index': row_index,
@@ -149,7 +147,6 @@ class PageScreen(Screen):
                 list_player.stop()
             else:
                 return  # continue to play the same song
-        print("Play " + medias[self.index])
         list_player.play_item_at_index(self.index)
         list_player.play()
 
@@ -173,7 +170,6 @@ class PageScreen(Screen):
         self.index -= 1
         if self.index < 0:
             self.index = len(medias)-1
-        print(self.index)
         self.last_index=-1
         self.song_progress=0
         self.on_pre_enter()
@@ -199,17 +195,15 @@ class PageScreen(Screen):
                 self.songTitle = ''
                 if not self.media.get_meta(0) is None:
                     self.songTitle = self.media.get_meta(0).decode('utf-8')
-                    # print("Title        : {}".format(self.media.get_meta(0).decode('utf-8')))
                 self.songArtist = ''
                 if not self.media.get_meta(1) is None:
                     self.songArtist = self.media.get_meta(1).decode('utf-8')
-                    # print("Artist       : {}".format(self.media.get_meta(1).decode('utf-8')))
             except:
                 pass  # do not print nothing
             self.duration = self.media.get_duration()
             m, s = divmod(self.duration / 1000, 60)
             h, m = divmod(m, 60)
-            # print("Song duration: {:02d}:{:02d}:{:02d}".format(h, m, s))
+
             self.media = None
 
         if self.duration!=0:
@@ -260,7 +254,6 @@ class TestApp(App):
         return sm
 
     def on_menu_selection(self, index):
-        print(index)
         if index != self.last_index:
             self.last_index = index
         else:
