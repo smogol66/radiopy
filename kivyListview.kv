@@ -1,6 +1,8 @@
 #:import la kivy.adapters.listadapter
 #:import factory kivy.factory
 #:import ListItemButton kivy.uix.listview.ListItemButton
+#:import math math
+
 <ListItemButton>:
     selected_color: .5, .3, .55, 1
     deselected_color: .5, .5, .5, 1
@@ -30,6 +32,8 @@
             ButtonImage:
                 size_hint_x: .15
                 source: 'img/clock_1.png'
+                on_press:
+                    app.show_clock()
 
         ListView:
             # size_hint: .8,.9
@@ -42,7 +46,6 @@
                 args_converter=root.args_converter)
 
 <PageScreen>:
-
     FloatLayout:
         BoxLayout:
             size: root.size
@@ -50,15 +53,25 @@
             orientation: 'vertical'
             BoxLayout:
                 size_hint_y: 0.1
-                Button:
-                    size_hint_x: .15
-                    text: 'MENU'
+                ButtonImage:
+                    size_hint_x: .2
+                    source: 'img/Song_List.png'
                     on_press:
                         app.stop_and_return()
-                Button:
+                ButtonImage:
+                    size_hint_x: 0.4
+                    source: 'img/prev_1.png'
+                    on_press:
+                        root.prev_song()
+                ButtonImage:
                     id: 'titleButton'
-                    text: root.labelText
+                    source: root.labelImage
                     on_press: root.plays()
+                ButtonImage:
+                    size_hint_x: 0.4
+                    source: 'img/next_1.png'
+                    on_press:
+                        root.next_song()
             Image:
                 source: 'img/carrousel_fictions132.png'
 
@@ -104,3 +117,85 @@
                 Label:
                     size_hint_y: 0.1
                     text: 'Vol.\n{:03}'.format(int(volume.value))
+
+
+[ClockNumber@Label]:
+    text: str(ctx.i)
+    pos_hint: {"center_x": 0.5+0.42*math.sin(math.pi/6*(ctx.i-12)), "center_y": 0.5+0.42*math.cos(math.pi/6*(ctx.i-12))}
+    font_size: self.height/16
+
+<ClockScreen>:
+    face: face
+    ticks: ticks
+    canvas:
+        Color:
+            rgb: .3, .3, .3
+        Rectangle:
+            size: self.size
+
+    ButtonImage:
+        id: button1
+        rel_size: .1
+        size_hint: self.rel_size, self.rel_size
+        pos: 10 ,(1-self.rel_size)*root.height-20
+        source: 'img/settings.png'
+        on_press: root.do_press()
+        on_release: root.do_release()
+
+    FloatLayout:
+        id: face
+        size_hint: None, None
+        pos_hint: {"center_x":0.5, "center_y":0.5}
+        size: min(root.size), min(root.size)
+        canvas:
+            Color:
+                rgb: 1, 1, 1
+#            Ellipse:
+#                size: self.size
+#                pos: self.pos
+            Rectangle:
+                source: 'img/roud_clock.png'
+                size: self.size
+                pos: self.pos
+
+        ClockNumber:
+            i: 1
+        ClockNumber:
+            i: 2
+        ClockNumber:
+            i: 3
+        ClockNumber:
+            i: 4
+        ClockNumber:
+            i: 5
+        ClockNumber:
+            i: 6
+        ClockNumber:
+            i: 7
+        ClockNumber:
+            i: 8
+        ClockNumber:
+            i: 9
+        ClockNumber:
+            i: 10
+        ClockNumber:
+            i: 11
+        ClockNumber:
+            i: 12
+    Ticks:
+        id: ticks
+        r: min(root.size)*0.7/2
+
+    ButtonImage:
+        id: button1
+        rel_size: .1
+        pos: root.width-self.width -10,(1-self.rel_size)*root.height-20
+        source: 'img/musik_1.png'
+        on_press: app.show_player()
+
+    Label:
+        id: label
+        size_hint: 1,0.1
+        text: ''
+        pos: 0,0
+
