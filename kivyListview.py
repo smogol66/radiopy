@@ -1,4 +1,4 @@
-from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.uix.screenmanager import ScreenManager, Screen, SwapTransition
 from kivy.lang import Builder
 from kivy.app import App
 from kivy.core.audio import SoundLoader
@@ -12,6 +12,12 @@ import random
 from os import listdir, path
 
 rpi = False
+try:
+  import RPi.GPIO as gpio
+  rpi = True
+except ImportError:
+  rpi = False
+
 if rpi:
     Instance = vlc.Instance('--aout=alsa', '--alsa-audio-device=dmixer')
 else:
@@ -35,8 +41,6 @@ for f in listdir(basepath):
         url = path.join(basepath,f)
         medias.append(url)
         # print(url)
-# shuffle it
-random.shuffle(medias)
 
 player = vlc.MediaPlayer(medias[0])
 
@@ -55,8 +59,6 @@ class MenuPageScreen(Screen):
                 MenuPageScreen.M.play()
             else:
                 MenuPageScreen.M.stop()
-        if player.is_playing():
-            player.stop()
 
     def args_converter(self, row_index, title):
         print ("{0}={1}".format(row_index, title))
@@ -69,12 +71,16 @@ class MenuPageScreen(Screen):
 
 class PageScreen(Screen):
     labelText = StringProperty('Pause')
-    index = NumericProperty('My Label')
+    index = NumericProperty(0)
     songTitle = StringProperty(' ')
     songArtist = StringProperty(' ')
+    playVolume = NumericProperty(100)
 
     def on_pre_enter(self):
-        print('Entering')
+        self.index = int(self.index)
+        print('Entering, index{}'.format(self.index))
+        if player.is_playing():
+            player.stop()
         print("Play " + medias[self.index])
         media = Instance.media_new(medias[self.index])
         player.set_media(media)
@@ -85,7 +91,7 @@ class PageScreen(Screen):
             try:
                 if not media.get_meta(0) is None:
                     self.songTitle = media.get_meta(0).decode('utf-8')
-                    print("Title        : {}".format(media.get_meta(0).decode('utf-8')))
+                    print("Tislider texttle        : {}".format(media.get_meta(0).decode('utf-8')))
                 if not media.get_meta(1) is None:
                     self.songArtist = media.get_meta(1).decode('utf-8')
                     print("Artist       : {}".format(media.get_meta(1).decode('utf-8')))
@@ -105,30 +111,35 @@ class PageScreen(Screen):
             player.play()
             self.labelText="Pause"
 
-
+    def set_volume(self, volume):
+        player.audio_set_volume(int(volume))
+        self.playVolume = volume
 
 class TestApp(App):
-    # data = ListProperty(["Item #{0}".format(i) for i in range(50)])
     data = ListProperty(medias)
+    playScreen = None
 
     def build(self):
-        sm = ScreenManager()
+        sm = ScreenManager(transition=SwapTransition (direction='right'))
         self.menu = MenuPageScreen(name='menu')
         sm.add_widget(self.menu)
-        for i in range(tmp):
-            name = PageScreen(name=str(i))
-            name.index = i
-            sm.add_widget(name)
+        self.playScreen = PageScreen(name='play')
+        self.playScreen.index = 0
+        sm.add_widget(self.playScreen)
         return sm
 
     def on_menu_selection(self, index):
         print(index)
-        self.root.current = str(index)
+        self.playScreen.index = index
+        self.root.current = 'play'
         # self.sm.get_screen(str(index)).index=index
         self.menu.plays(index)
 
     def stop_and_return(self):
+        self.root.direction= 'left'
         self.root.current = 'menu'
+
+
 
 if __name__ == '__main__':
     TestApp().run()

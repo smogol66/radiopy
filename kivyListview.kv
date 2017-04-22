@@ -1,5 +1,14 @@
 #:import la kivy.adapters.listadapter
 #:import factory kivy.factory
+#:import ListItemButton kivy.uix.listview.ListItemButton
+<ListItemButton>:
+    selected_color: .5, .3, .55, 1
+    deselected_color: .5, .5, .5, 1
+
+<ButtonImage@ButtonBehavior+Image>
+    rel_size: 1
+    size_hint: self.rel_size, self.rel_size
+    opacity: 1 if self.state == 'normal' else .5
 
 <MenuButton>:
     size_hint_y: None
@@ -8,13 +17,22 @@
 
 <MenuPageScreen>:
     BoxLayout:
+        orientation: 'vertical'
         BoxLayout:
-            size_hint:(.1, None)
-            Button:
-                text: 'Credit'
-                #on_press:root.show_popup()
+            size_hint_y: .15
+            padding: (3,5)
+            ButtonImage:
+                size_hint_x: .2
+                source: 'img/settings.png'
+            Label:
+                id: 'Spacer'
+                text: ''
+            ButtonImage:
+                size_hint_x: .15
+                source: 'img/clock_1.png'
+
         ListView:
-            size_hint: .8,.9
+            # size_hint: .8,.9
             adapter:
                 la.ListAdapter(
                 data=app.data,
@@ -24,42 +42,65 @@
                 args_converter=root.args_converter)
 
 <PageScreen>:
-    BoxLayout:
-        orientation: 'vertical'
-        BoxLayout:
-            size_hint_y: 0.1
-            Button:
-                size_hint_x: .15
-                text: 'MENU'
-                on_press:
-                    app.stop_and_return()
-            Button:
-                id: 'titleButton'
-                text: root.labelText
-                on_press: root.plays()
-        Image:
-            source: 'img/carrousel_fictions132.png'
 
     FloatLayout:
-        size_hint_y: 0.1
-
-        canvas:
-            Color:
-                rgba: .5, .3, .55, .5
-            Rectangle:
-                size: self.size
-                pos: self.pos
         BoxLayout:
+            size: root.size
+            size_hint: None, None
             orientation: 'vertical'
-            padding: (20,0)
-            Label:
-                id: Title
-                font_size: self.height * 0.8
-                text_size: self.size
-                text: root.songTitle
+            BoxLayout:
+                size_hint_y: 0.1
+                Button:
+                    size_hint_x: .15
+                    text: 'MENU'
+                    on_press:
+                        app.stop_and_return()
+                Button:
+                    id: 'titleButton'
+                    text: root.labelText
+                    on_press: root.plays()
+            Image:
+                source: 'img/carrousel_fictions132.png'
 
-            Label:
-                id: Artist
-                text: root.songArtist
-                font_size: self.height * 0.8
-                text_size: self.size
+        AnchorLayout:
+            anchor_x: 'right'
+            anchor_y: 'bottom'
+            BoxLayout:
+                size: 0.9 * root.width, 0.1 * root.height
+                size_hint: None, None
+                orientation: 'vertical'
+                padding: (20,0)
+                canvas:
+                    Color:
+                        rgba: .5, .3, .55, .5
+                    Rectangle:
+                        size: self.size
+                        pos: self.pos
+                Label:
+                    id: Title
+                    font_size: self.height * 0.8
+                    text_size: self.size
+                    text: root.songTitle
+
+                Label:
+                    id: Artist
+                    text: root.songArtist
+                    font_size: self.height * 0.8
+                    text_size: self.size
+
+        AnchorLayout:
+            anchor_x: 'right'
+            anchor_y: 'center'
+            BoxLayout:
+                orientation: 'vertical'
+                size: 50,root.height * 0.7
+                size_hint: None, None
+                Slider:
+                    id: volume
+                    max: 120
+                    orientation: 'vertical'
+                    value: root.playVolume
+                    on_value: root.set_volume(volume.value)
+                Label:
+                    size_hint_y: 0.1
+                    text: 'Vol.\n{:03}'.format(int(volume.value))
