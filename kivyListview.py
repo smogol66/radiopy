@@ -138,8 +138,7 @@ class PageScreen(Screen):
     last_index = 0
     duration=0
     schedule = None
-    SCHEDULE_DELAY = 1
-
+    SCHEDULE_DELAY = 0.5
     media = None
 
     def on_pre_enter(self):
@@ -191,10 +190,6 @@ class PageScreen(Screen):
         player.audio_set_volume(int(volume))
         self.playVolume = volume
 
-    def change_pos(self, position):
-        millis = self.duration * position / 100
-        player.set_time(int(millis))
-
     def update_time(self, *args):
         if self.media is None:
             self.media = player.get_media()
@@ -219,10 +214,20 @@ class PageScreen(Screen):
 
         if self.duration!=0:
             diff = self.duration - player.get_time()
-            self.song_progress = player.get_time() / float(self.duration) * 100.0
+            progress = player.get_time() / float(self.duration) * 100.0
         else:
             diff = player.get_time()
-            self.song_progress = 0
+            progress = 0
+
+        # check a difference in the song position
+        if abs(self.song_progress - self.ids.song_pos.value) > 5:
+            # the cursor has been changed by the user, correct song position
+            millis = self.duration * self.ids.song_pos.value / 100
+            player.set_time(int(millis))
+            self.song_progress = self.ids.song_pos.value
+        else:
+            self.song_progress = progress
+
         m, s = divmod(diff / 1000, 60)
         h, m = divmod(m, 60)
         if h==0:

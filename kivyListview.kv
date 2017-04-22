@@ -57,15 +57,14 @@
                 source: 'img/carrousel_fictions132.png'
             Slider:
                 id: song_pos
-                size_hint_y: 0.03
+                size_hint_y: 0.1
                 size_hint_x: 0.8
                 max_value: 100
                 value: root.song_progress
                 cursor_image: 'img/play_pos.png'
                 cursor_size: sp(16),sp(16)
                 pos_hint: {"center_x":0.5, "center_y":0.5}
-                on_touch_up:
-                    root.change_pos(song_pos.value)
+
             BoxLayout:
                 size_hint_y: 0.15
                 ButtonImage:
