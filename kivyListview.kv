@@ -25,18 +25,41 @@
 
 <PageScreen>:
     BoxLayout:
+        orientation: 'vertical'
         BoxLayout:
-            size_hint:(.1, None)
+            size_hint_y: 0.1
             Button:
+                size_hint_x: .15
                 text: 'MENU'
                 on_press:
                     app.stop_and_return()
-        BoxLayout:
-            orientation:'vertical'
             Button:
                 id: 'titleButton'
-                text: root.labelText + ' ' + str(root.index)
-                size_hint:(1, .2)
+                text: root.labelText
                 on_press: root.plays()
-            Image:
-                source: 'img/carrousel_fictions132.png'
+        Image:
+            source: 'img/carrousel_fictions132.png'
+
+    FloatLayout:
+        size_hint_y: 0.1
+
+        canvas:
+            Color:
+                rgba: .5, .3, .55, .5
+            Rectangle:
+                size: self.size
+                pos: self.pos
+        BoxLayout:
+            orientation: 'vertical'
+            padding: (20,0)
+            Label:
+                id: Title
+                font_size: self.height * 0.8
+                text_size: self.size
+                text: root.songTitle
+
+            Label:
+                id: Artist
+                text: root.songArtist
+                font_size: self.height * 0.8
+                text_size: self.size

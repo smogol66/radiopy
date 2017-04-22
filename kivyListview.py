@@ -49,34 +49,62 @@ class MenuButton(ListItemButton):
 class MenuPageScreen(Screen):
     M = SoundLoader.load('http://stream.srg-ssr.ch/m/rsj/mp3_128')
 
-    def plays(self):
+    def plays(self,index):
         if not MenuPageScreen.M is None:
             if MenuPageScreen.M.state == 'stop':
                 MenuPageScreen.M.play()
             else:
                 MenuPageScreen.M.stop()
+        if player.is_playing():
+            player.stop()
 
     def args_converter(self, row_index, title):
         print ("{0}={1}".format(row_index, title))
+        names = title.split('/')
         return {
             'index': row_index,
-            'text': title
+            'text': names[-1]
         }
 
 
 class PageScreen(Screen):
-    labelText = StringProperty('My label')
+    labelText = StringProperty('Pause')
     index = NumericProperty('My Label')
+    songTitle = StringProperty(' ')
+    songArtist = StringProperty(' ')
+
+    def on_pre_enter(self):
+        print('Entering')
+        print("Play " + medias[self.index])
+        media = Instance.media_new(medias[self.index])
+        player.set_media(media)
+        player.audio_set_volume(100)
+
+        media.parse()
+        if media.is_parsed():
+            try:
+                if not media.get_meta(0) is None:
+                    self.songTitle = media.get_meta(0).decode('utf-8')
+                    print("Title        : {}".format(media.get_meta(0).decode('utf-8')))
+                if not media.get_meta(1) is None:
+                    self.songArtist = media.get_meta(1).decode('utf-8')
+                    print("Artist       : {}".format(media.get_meta(1).decode('utf-8')))
+                print self.songTitle
+            except:
+                pass  # do not print nothing
+            m, s = divmod(media.get_duration() / 1000, 60)
+            h, m = divmod(m, 60)
+            print("Song duration: {:02d}:{:02d}:{:02d}".format(h, m, s))
+        player.play()
 
     def plays(self):
         if player.is_playing():
             player.pause()
+            self.labelText="Play"
         else:
-            print("Play " + self.labelText)
-            media = Instance.media_new(self.labelText)
-            player.set_media(media)
-            player.audio_set_volume(100)
             player.play()
+            self.labelText="Pause"
+
 
 
 class TestApp(App):
@@ -89,8 +117,7 @@ class TestApp(App):
         sm.add_widget(self.menu)
         for i in range(tmp):
             name = PageScreen(name=str(i))
-            name.index = int(i)
-            name.labelText = medias[i]
+            name.index = i
             sm.add_widget(name)
         return sm
 
@@ -98,7 +125,7 @@ class TestApp(App):
         print(index)
         self.root.current = str(index)
         # self.sm.get_screen(str(index)).index=index
-        self.menu.plays()
+        self.menu.plays(index)
 
     def stop_and_return(self):
         self.root.current = 'menu'
