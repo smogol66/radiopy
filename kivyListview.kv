@@ -14,12 +14,23 @@
 
 <MenuButton>:
     size_hint_y: None
-    height: dp(30)
+    height: dp(40)
+    font_size: self.height * 0.6
+
     on_release: app.on_menu_selection(self.index)
 
 <MenuPageScreen>:
     BoxLayout:
         orientation: 'vertical'
+        ListView:
+            # size_hint: .8,.9
+            adapter:
+                la.ListAdapter(
+                data=app.data,
+                cls=factory.Factory.MenuButton,
+                selection_mode='single',
+                allow_empty_selection=True,
+                args_converter=root.args_converter)
         BoxLayout:
             size_hint_y: .15
             padding: (3,5)
@@ -35,15 +46,6 @@
                 on_press:
                     app.show_clock()
 
-        ListView:
-            # size_hint: .8,.9
-            adapter:
-                la.ListAdapter(
-                data=app.data,
-                cls=factory.Factory.MenuButton,
-                selection_mode='single',
-                allow_empty_selection=True,
-                args_converter=root.args_converter)
 
 <PageScreen>:
     FloatLayout:
@@ -51,8 +53,21 @@
             size: root.size
             size_hint: None, None
             orientation: 'vertical'
+            Image:
+                source: 'img/carrousel_fictions132.png'
+            Slider:
+                id: song_pos
+                size_hint_y: 0.03
+                size_hint_x: 0.8
+                max_value: 100
+                value: root.song_progress
+                cursor_image: 'img/play_pos.png'
+                cursor_size: sp(16),sp(16)
+                pos_hint: {"center_x":0.5, "center_y":0.5}
+                on_touch_up:
+                    root.change_pos(song_pos.value)
             BoxLayout:
-                size_hint_y: 0.1
+                size_hint_y: 0.15
                 ButtonImage:
                     size_hint_x: .2
                     source: 'img/Song_List.png'
@@ -72,34 +87,39 @@
                     source: 'img/next_1.png'
                     on_press:
                         root.next_song()
-            Image:
-                source: 'img/carrousel_fictions132.png'
 
         AnchorLayout:
             anchor_x: 'right'
-            anchor_y: 'bottom'
+            anchor_y: 'top'
             BoxLayout:
-                size: 0.9 * root.width, 0.1 * root.height
+                orientation: 'horizontal'
+                size: 0.8 * root.width, 0.1 * root.height
                 size_hint: None, None
-                orientation: 'vertical'
-                padding: (20,0)
                 canvas:
                     Color:
                         rgba: .5, .3, .55, .5
                     Rectangle:
                         size: self.size
                         pos: self.pos
-                Label:
-                    id: Title
-                    font_size: self.height * 0.8
-                    text_size: self.size
-                    text: root.songTitle
+                BoxLayout:
+                    orientation: 'vertical'
+                    padding: (20,0)
 
+                    Label:
+                        id: Title
+                        font_size: self.height * 0.8
+                        text_size: self.size
+                        text: root.songTitle
+
+                    Label:
+                        id: Artist
+                        text: root.songArtist
+                        font_size: self.height * 0.8
+                        text_size: self.size
                 Label:
-                    id: Artist
-                    text: root.songArtist
-                    font_size: self.height * 0.8
-                    text_size: self.size
+                    size: 0.1 * root.width, 0.1 * root.height
+                    size_hint: None, None
+                    text: root.time_elasped
 
         AnchorLayout:
             anchor_x: 'right'
@@ -133,14 +153,26 @@
         Rectangle:
             size: self.size
 
-    ButtonImage:
-        id: button1
-        rel_size: .1
-        size_hint: self.rel_size, self.rel_size
-        pos: 10 ,(1-self.rel_size)*root.height-20
-        source: 'img/settings.png'
-        on_press: root.do_press()
-        on_release: root.do_release()
+    AnchorLayout:
+        anchor_x: 'left'
+        anchor_y: 'bottom'
+        padding: 10
+        ButtonImage:
+            size: 50,50
+            size_hint: None, None
+            source: 'img/settings.png'
+            on_press: root.do_press()
+            on_release: root.do_release()
+
+    AnchorLayout:
+        anchor_x: 'right'
+        anchor_y: 'bottom'
+        padding: 10
+        ButtonImage:
+            size: 50,50
+            size_hint: None, None
+            source: 'img/musik_1.png'
+            on_press: app.show_player()
 
     FloatLayout:
         id: face
@@ -182,16 +214,12 @@
             i: 11
         ClockNumber:
             i: 12
+
     Ticks:
         id: ticks
         r: min(root.size)*0.7/2
 
-    ButtonImage:
-        id: button1
-        rel_size: .1
-        pos: root.width-self.width -10,(1-self.rel_size)*root.height-20
-        source: 'img/musik_1.png'
-        on_press: app.show_player()
+
 
     Label:
         id: label
