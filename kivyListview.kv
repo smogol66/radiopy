@@ -1,0 +1,42 @@
+#:import la kivy.adapters.listadapter
+#:import factory kivy.factory
+
+<MenuButton>:
+    size_hint_y: None
+    height: dp(30)
+    on_release: app.on_menu_selection(self.index)
+
+<MenuPageScreen>:
+    BoxLayout:
+        BoxLayout:
+            size_hint:(.1, None)
+            Button:
+                text: 'Credit'
+                #on_press:root.show_popup()
+        ListView:
+            size_hint: .8,.9
+            adapter:
+                la.ListAdapter(
+                data=app.data,
+                cls=factory.Factory.MenuButton,
+                selection_mode='single',
+                allow_empty_selection=True,
+                args_converter=root.args_converter)
+
+<PageScreen>:
+    BoxLayout:
+        BoxLayout:
+            size_hint:(.1, None)
+            Button:
+                text: 'MENU'
+                on_press:
+                    app.stop_and_return()
+        BoxLayout:
+            orientation:'vertical'
+            Button:
+                id: 'titleButton'
+                text: root.labelText + ' ' + str(root.index)
+                size_hint:(1, .2)
+                on_press: root.plays()
+            Image:
+                source: 'img/carrousel_fictions132.png'

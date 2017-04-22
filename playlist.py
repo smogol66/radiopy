@@ -6,6 +6,13 @@ from urllib2 import unquote
 
 
 rpi = False
+
+if rpi:
+    basepath = '/home/pi/sound/Audio/'
+else:
+    basepath = '/home/juan/Musique/'
+    #  basepath= '/home/Gemeinsame Dateien/Audio/'
+
 if rpi:
     i = vlc.Instance('--aout=alsa', '--alsa-audio-device=dmixer')
 else:
@@ -15,13 +22,6 @@ medialist = i.media_list_new()
 p = i.media_list_player_new()
 pl = i.media_player_new()
 p.set_media_player(pl)
-
-
-if rpi:
-    basepath = '/home/pi/sound/Audio/'
-else:
-    basepath = '/home/juan/Musique/'
-    #  basepath= '/home/Gemeinsame Dateien/Audio/'
 
 #create a list of medias
 medias = []
