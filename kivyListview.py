@@ -46,10 +46,19 @@ for f in listdir(basepath):
         medias.append(url)
         # print(url)
 
-player = vlc.MediaPlayer(medias[0])
+media_list = Instance.media_list_new()
+player = Instance.media_player_new()
+list_player = Instance.media_list_player_new()
+list_player.set_media_player(player)
+
+#create a vlc medial list from the medias
+for url in medias:
+    item = Instance.media_new(url)
+    media_list.add_media(item.get_mrl())
+
+list_player.set_media_list(media_list)
 
 Builder.load_file('kivyListview.kv')
-
 
 class MyClockWidget(FloatLayout):
     def do_press(self):
@@ -113,21 +122,22 @@ class PageScreen(Screen):
     songTitle = StringProperty(' ')
     songArtist = StringProperty(' ')
     playVolume = NumericProperty(100)
+    last_index = 0
 
     def on_pre_enter(self):
         self.index = int(self.index)
         print('Entering, index{}'.format(self.index))
-        current_media=player.get_media()
+
         media = Instance.media_new(medias[self.index])
-        if player.is_playing():
-            if current_media.get_mrl() != media.get_mrl():
-                player.stop()
+        if list_player.is_playing():
+            if self.last_index != self.index:
+                self.last_index = self.index
+                list_player.stop()
             else:
                 return  # continue to play the same song
         print("Play " + medias[self.index])
 
-        player.set_media(media)
-        player.audio_set_volume(100)
+        list_player.play_item_at_index(self.index)
 
         media.parse()
         if media.is_parsed():
