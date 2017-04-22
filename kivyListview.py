@@ -14,6 +14,10 @@ import vlc
 from os import listdir, path
 import datetime
 
+from kivy.config import Config
+Config.set('graphics', 'width', '800')
+Config.set('graphics', 'height', '480')
+
 rpi = False
 try:
   import RPi.GPIO as gpio
@@ -98,6 +102,14 @@ class Ticks(Widget):
                        overdraw_width=1.6)
 
 
+class ClockScreen(Screen):
+    def do_press(self):
+        self.ids.label.text='pressed'
+
+    def do_release(self):
+        self.ids.label.text=''
+
+
 class MenuButton(ListItemButton):
     index = NumericProperty(0)
 
@@ -115,81 +127,111 @@ class MenuPageScreen(Screen):
             'text': names[-1]
         }
 
-
 class PageScreen(Screen):
     labelImage = StringProperty('img/pause.png')
     index = NumericProperty(0)
     songTitle = StringProperty(' ')
     songArtist = StringProperty(' ')
     playVolume = NumericProperty(100)
+    time_elasped = StringProperty('00:00')
+    song_progress = NumericProperty(0)
     last_index = 0
+    duration=0
+    schedule = None
+    SCHEDULE_DELAY = 1
+
+    media = None
 
     def on_pre_enter(self):
         self.index = int(self.index)
-        print('Entering, index{}'.format(self.index))
 
-        media = Instance.media_new(medias[self.index])
         if list_player.is_playing():
             if self.last_index != self.index:
-                self.last_index = self.index
                 list_player.stop()
             else:
                 return  # continue to play the same song
         print("Play " + medias[self.index])
-
         list_player.play_item_at_index(self.index)
+        list_player.play()
 
-        media.parse()
-        if media.is_parsed():
-            try:
-                self.songTitle = ''
-                if not media.get_meta(0) is None:
-                    self.songTitle = media.get_meta(0).decode('utf-8')
-                    print("Title        : {}".format(media.get_meta(0).decode('utf-8')))
-                self.songArtist = ''
-                if not media.get_meta(1) is None:
-                    self.songArtist = media.get_meta(1).decode('utf-8')
-                    print("Artist       : {}".format(media.get_meta(1).decode('utf-8')))
-                print self.songTitle
-            except:
-                pass  # do not print nothing
-            m, s = divmod(media.get_duration() / 1000, 60)
-            h, m = divmod(m, 60)
-            print("Song duration: {:02d}:{:02d}:{:02d}".format(h, m, s))
-        player.play()
+        self.last_index = self.index
+        self.labelImage = 'img/pause.png'
+        if self.schedule is None:
+            self.schedule = Clock.schedule_interval(self.update_time, self.SCHEDULE_DELAY)
 
     def plays(self):
         if player.is_playing():
             player.pause()
             self.labelImage='img/play.png'
+            Clock.unschedule(self.schedule)
+            self.schedule= None
         else:
             player.play()
             self.labelImage='img/pause.png'
+            self.schedule = Clock.schedule_interval(self.update_time, self.SCHEDULE_DELAY)
 
     def prev_song(self):
         self.index -= 1
         if self.index < 0:
             self.index = len(medias)-1
         print(self.index)
+        self.last_index=-1
+        self.song_progress=0
         self.on_pre_enter()
 
     def next_song(self):
         self.index += 1
         if self.index > len(medias)-1:
             self.index = 0
+        self.last_index = -1
+        self.song_progress = 0
         self.on_pre_enter()
 
     def set_volume(self, volume):
         player.audio_set_volume(int(volume))
         self.playVolume = volume
 
+    def change_pos(self, position):
+        millis = self.duration * position / 100
+        player.set_time(int(millis))
 
-class ClockScreen(Screen):
-    def do_press(self):
-        self.ids.label.text='pressed'
+    def update_time(self, *args):
+        if self.media is None:
+            self.media = player.get_media()
+            self.media.parse()
+        if self.media.is_parsed():
+            try:
+                self.songTitle = ''
+                if not self.media.get_meta(0) is None:
+                    self.songTitle = self.media.get_meta(0).decode('utf-8')
+                    # print("Title        : {}".format(self.media.get_meta(0).decode('utf-8')))
+                self.songArtist = ''
+                if not self.media.get_meta(1) is None:
+                    self.songArtist = self.media.get_meta(1).decode('utf-8')
+                    # print("Artist       : {}".format(self.media.get_meta(1).decode('utf-8')))
+            except:
+                pass  # do not print nothing
+            self.duration = self.media.get_duration()
+            m, s = divmod(self.duration / 1000, 60)
+            h, m = divmod(m, 60)
+            # print("Song duration: {:02d}:{:02d}:{:02d}".format(h, m, s))
+            self.media = None
 
-    def do_release(self):
-        self.ids.label.text=''
+        if self.duration!=0:
+            diff = self.duration - player.get_time()
+            self.song_progress = player.get_time() / float(self.duration) * 100.0
+        else:
+            diff = player.get_time()
+            self.song_progress = 0
+        m, s = divmod(diff / 1000, 60)
+        h, m = divmod(m, 60)
+        if h==0:
+            self.time_elasped = "{:02d}:{:02d}".format(m, s)
+        else:
+            self.time_elasped="{:02d}:{:02d}:{:02d}".format(h, m, s)
+        if not list_player.is_playing():
+            self.next_song()
+
 
 
 class TestApp(App):
@@ -205,6 +247,7 @@ class TestApp(App):
         sm.add_widget(self.menuScreen)
         self.playScreen = PageScreen(name='play')
         self.playScreen.index = 0
+
         sm.add_widget(self.playScreen)
         self.clockScreen = ClockScreen(name='clock')
         sm.add_widget(self.clockScreen)
