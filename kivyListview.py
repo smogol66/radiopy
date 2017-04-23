@@ -40,11 +40,14 @@ medias.append("http://streaming.radio.rtl2.fr/rtl2-1-44-128")
 medias.append("http://stream.srg-ssr.ch/m/couleur3/mp3_128")
 
 tmp = 4
-for f in listdir(basepath):
-    if f.lower().endswith('.mp3'):
-        tmp += 1
-        url = path.join(basepath, f)
-        medias.append(url)
+try:    # load the music from media
+    for f in listdir(basepath):
+        if f.lower().endswith('.mp3'):
+            tmp += 1
+            url = path.join(basepath, f)
+            medias.append(url)
+except OSError:
+    print('No media found. Path error?')
 
 media_list = Instance.media_list_new()
 player = Instance.media_player_new()
