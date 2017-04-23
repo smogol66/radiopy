@@ -1,4 +1,3 @@
-import kivy
 from kivy.uix.listview import ListItemButton
 from kivy.uix.screenmanager import ScreenManager, Screen, SwapTransition
 from kivy.properties import ListProperty, NumericProperty, StringProperty
@@ -10,58 +9,54 @@ from math import cos, sin, pi
 from kivy.clock import Clock
 from kivy.lang import Builder
 import vlc
-from os import listdir, path
+from os import path, walk
 import datetime
 from kivy.config import Config
+from extendedsettings import ExtendedSettings
+from settingsjson import settings_json
+
+
 try:
     import RPi.GPIO
     rpi = True
 except ImportError:
     rpi = False
 
-kivy.require('1.0.5')
-Config.set('graphics', 'width', '800')
-Config.set('graphics', 'height', '480')
+media_list = None
 
-if rpi:
-    Instance = vlc.Instance('--aout=alsa', '--alsa-audio-device=dmixer')
-else:
-    Instance = vlc.Instance()
 
-if rpi:
-    basepath = '/home/pi/sound/Audio/'
-else:
-    basepath = '/home/Gemeinsame Dateien/Audio'
+def load_media(folder, scan_folders=False):
 
-medias = list()
-medias.append("http://stream.srg-ssr.ch/m/rsj/mp3_128")
-medias.append("http://streaming.radio.funradio.fr/fun-1-48-192")
-medias.append("http://streaming.radio.rtl2.fr/rtl2-1-44-128")
-medias.append("http://stream.srg-ssr.ch/m/couleur3/mp3_128")
+    def recursive_walk(start_folder, with_sub_folders):
+        for folderName, sub_folders, file_names in walk(start_folder.encode('utf8')):
+            if folderName != start_folder and not with_sub_folders:
+                return
+            else:
+                print('\nFolder: ' + folderName + '\n')
+            for filename in file_names:
+                if filename.lower().split('.')[-1] in ('mp3','ogg'):
+                    media = Instance.media_new(path.join(folderName, filename))
+                    media_list.add_media(media)
+            if sub_folders:
+                for sub_folder in sub_folders:
+                    recursive_walk(sub_folder, with_sub_folders)
 
-tmp = 4
-try:    # load the music from media
-    for f in listdir(basepath):
-        if f.lower().endswith('.mp3'):
-            tmp += 1
-            url = path.join(basepath, f)
-            medias.append(url)
-except OSError:
-    print('No media found. Path error?')
+    global media_list
+    if media_list:
+        media_list.release()
+        media_list = Instance.media_list_new()
+    else:
+        media_list = Instance.media_list_new()
 
-media_list = Instance.media_list_new()
-player = Instance.media_player_new()
-list_player = Instance.media_list_player_new()
-list_player.set_media_player(player)
+    media_list.add_media(Instance.media_new('http://stream.srg-ssr.ch/m/rsj/mp3_128'))
+    media_list.add_media(Instance.media_new('http://stream.srg-ssr.ch/m/rsj/mp3_128'))
+    media_list.add_media(Instance.media_new('http://streaming.radio.funradio.fr/fun-1-48-192'))
+    media_list.add_media(Instance.media_new('http://streaming.radio.rtl2.fr/rtl2-1-44-128'))
+    media_list.add_media(Instance.media_new('http://stream.srg-ssr.ch/m/couleur3/mp3_128'))
 
-# create a vlc medial list from the medias
-for url in medias:
-    item = Instance.media_new(url)
-    media_list.add_media(item.get_mrl())
+    recursive_walk(folder, scan_folders)
 
-list_player.set_media_list(media_list)
-
-Builder.load_file('kivyListview.kv')
+    list_player.set_media_list(media_list)
 
 
 class MyClockWidget(FloatLayout):
@@ -120,10 +115,24 @@ class MenuPageScreen(Screen):
         pass
 
     def args_converter(self, row_index, title):
-        names = title.split('/')
+        title.parse()
+        if title.is_parsed():
+            song_title = ''
+            song_artist = ''
+            try:
+                if not title.get_meta(0) is None:
+                    song_title = title.get_meta(0).decode('utf-8')
+
+                if not title.get_meta(1) is None:
+                    song_artist = title.get_meta(1).decode('utf-8')
+            except ValueError:
+                pass  # do not print nothing
+
+            text = "{} by {}".format(song_title, song_artist) if song_artist != '' else song_title
+            text = title.get_mrl().replace('%20',' ').split('/')[-1] if text == '' else text
         return {
             'index': row_index,
-            'text': names[-1]
+            'text': text
         }
 
 
@@ -171,14 +180,14 @@ class PageScreen(Screen):
     def prev_song(self):
         self.index -= 1
         if self.index < 0:
-            self.index = len(medias)-1
+            self.index = media_list.count()-1
         self.last_index = -1
         self.song_progress = 0
         self.on_pre_enter()
 
     def next_song(self):
         self.index += 1
-        if self.index > len(medias)-1:
+        if self.index > media_list.count()-1:
             self.index = 0
         self.last_index = -1
         self.song_progress = 0
@@ -201,8 +210,9 @@ class PageScreen(Screen):
                 self.songArtist = ''
                 if not self.media.get_meta(1) is None:
                     self.songArtist = self.media.get_meta(1).decode('utf-8')
-            except:
+            except ValueError:
                 pass  # do not print nothing
+
             self.duration = self.media.get_duration()
             self.media = None
 
@@ -232,7 +242,7 @@ class PageScreen(Screen):
             self.next_song()
 
 
-class TestApp(App):
+class RadioPyApp(App):
     data = ListProperty()
     playScreen = None
     menuScreen = None
@@ -240,10 +250,15 @@ class TestApp(App):
     last_index = -1
 
     def build(self):
+
+        self.settings_cls = ExtendedSettings
+        media_path = self.config.get('Base', 'mediapath')
+        sub = self.config.get('Base', 'boolsub_folders') == u'1'
+        load_media(media_path,sub)
         sm = ScreenManager(transition=SwapTransition(direction='right'))
         self.menuScreen = MenuPageScreen(name='menu')
         sm.add_widget(self.menuScreen)
-        self.data = medias
+        self.data = media_list
         self.playScreen = PageScreen(name='play')
         self.playScreen.index = 0
 
@@ -253,12 +268,32 @@ class TestApp(App):
         Clock.schedule_interval(self.clockScreen.ticks.update_clock, 0.1)
         return sm
 
+    def build_config(self, config):
+        config.setdefaults('Base', {
+            'startupvolume': 100,
+            'baselamp': 'off',
+            'mediapath': base_path,
+            'runcolor': '#ffffffff',
+            'boolsub_folders': 'False',
+        })
+
+    def build_settings(self, settings):
+        settings.add_json_panel('Radio Py',
+                                self.config,
+                                data=settings_json)
+
+    def on_config_change(self, config, section,
+                         key, value):
+        if key=='mediapath' or key=='boolsub_folders':
+            sub = self.config.get(section,'boolsub_folders')
+            folder = self.config.get(section,'mediapath')
+            load_media(folder, sub)
+            self.data = media_list
+        pass
+
     def on_menu_selection(self, index):
         if index != self.last_index:
             self.last_index = index
-        else:
-            pass
-            # TODO:: avoid the selected item to toggle
 
         self.playScreen.index = index
         self.root.current = 'play'
@@ -273,5 +308,25 @@ class TestApp(App):
     def show_player(self):
         self.root.current = 'play'
 
+if rpi:
+    Instance = vlc.Instance('--aout=alsa', '--alsa-audio-device=dmixer')
+else:
+    Instance = vlc.Instance()
+
+if rpi:
+    base_path = '/home/pi/sound/Audio/'
+else:
+    base_path = '/home/Gemeinsame Dateien/Audio'
+
+player = Instance.media_player_new()
+list_player = Instance.media_list_player_new()
+list_player.set_media_player(player)
+
+if not rpi:
+    Config.set('graphics', 'width', '800')
+    Config.set('graphics', 'height', '480')
+
+Builder.load_file('kivyListview.kv')
+
 if __name__ == '__main__':
-    TestApp().run()
+    RadioPyApp().run()

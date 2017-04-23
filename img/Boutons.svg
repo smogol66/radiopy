@@ -167,9 +167,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.35355339"
-     inkscape:cx="216.20094"
-     inkscape:cy="1067.6178"
+     inkscape:zoom="1.4142136"
+     inkscape:cx="1794.8085"
+     inkscape:cy="230.24239"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -183,7 +183,7 @@
      inkscape:window-y="24"
      inkscape:window-maximized="1"
      inkscape:document-rotation="0"
-     inkscape:bbox-nodes="false"
+     inkscape:bbox-nodes="true"
      inkscape:snap-intersection-paths="true"
      inkscape:snap-bbox-edge-midpoints="false"
      inkscape:snap-bbox-midpoints="false"
@@ -209,7 +209,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -484,17 +484,18 @@
        transform="translate(346.32381,-23.571594)"
        inkscape:export-xdpi="101.6"
        inkscape:export-ydpi="101.6"
-       inkscape:export-filename="/media/eric/PKBACK# 001/IPA_/GUI/next_1.png">
+       inkscape:export-filename="./next_1.png">
       <g
          inkscape:export-ydpi="101.6"
          inkscape:export-xdpi="101.6"
          transform="matrix(1.5128223,0,0,0.89521869,67.366861,61.728487)"
-         id="g71">
+         id="g71"
+         style="fill:none">
         <rect
            inkscape:export-ydpi="101.6"
            inkscape:export-xdpi="101.6"
            ry="0"
-           style="fill:#4d4d4d;stroke-width:0.35598451"
+           style="fill:none;stroke-width:0.35598451"
            y="187.96132"
            x="10.961309"
            height="22.40815"
@@ -505,33 +506,37 @@
          inkscape:export-ydpi="101.6"
          inkscape:export-xdpi="101.6"
          transform="matrix(1.4423414,0,0,1.4423414,82.507033,222.78909)"
-         id="g89">
+         id="g89"
+         style="fill:#3498db;fill-opacity:1">
         <g
-           id="info" />
+           id="info"
+           style="fill:#3498db;fill-opacity:1" />
         <g
-           id="icons">
+           id="icons"
+           style="fill:#3498db;fill-opacity:1">
           <path
              inkscape:connector-curvature="0"
              d="m 22.2,10.6 -9,-5.4 C 12.2,4.6 11,5.4 11,6.6 V 9.8 L 3.2,5.2 C 2.2,4.6 1,5.4 1,6.6 v 10.7 c 0,1.2 1.2,2 2.2,1.4 L 11,14.1 v 3.2 c 0,1.2 1.2,2 2.2,1.4 l 9,-5.4 c 1.1,-0.5 1.1,-2.1 0,-2.7 z"
              id="next"
-             style="fill:#ff0000" />
+             style="fill:#3498db;fill-opacity:1" />
         </g>
       </g>
     </g>
     <g
        id="g5347"
-       transform="translate(426.94413,-46.33937)"
-       inkscape:export-filename="/media/eric/PKBACK# 001/IPA_/GUI/prev_1.png"
+       transform="translate(479.05268,-9.5108641)"
+       inkscape:export-filename="./prev_1.png"
        inkscape:export-xdpi="101.6"
        inkscape:export-ydpi="101.6">
       <g
-         transform="matrix(-1.5128223,0,0,0.89521862,51.679143,104.55647)"
-         id="g93">
+         transform="matrix(-1.7391344,0,0,-1.6260053,56.535971,606.69703)"
+         id="g93"
+         style="fill:none">
         <rect
            inkscape:export-ydpi="101.6"
            inkscape:export-xdpi="101.6"
            ry="0"
-           style="fill:#4d4d4d;stroke-width:0.35598451"
+           style="fill:none;stroke-width:0.35598451"
            y="187.96132"
            x="10.961309"
            height="22.40815"
@@ -540,13 +545,16 @@
       </g>
       <g
          transform="matrix(-1.4423414,0,0,1.4423414,36.538971,265.61706)"
-         id="g101">
+         id="g101"
+         style="fill:#3498db;fill-opacity:1">
         <g
-           id="g95" />
+           id="g95"
+           style="fill:#3498db;fill-opacity:1" />
         <g
-           id="g99">
+           id="g99"
+           style="fill:#3498db;fill-opacity:1">
           <path
-             style="fill:#ff0000"
+             style="fill:#3498db;fill-opacity:1"
              inkscape:connector-curvature="0"
              d="m 22.2,10.6 -9,-5.4 C 12.2,4.6 11,5.4 11,6.6 V 9.8 L 3.2,5.2 C 2.2,4.6 1,5.4 1,6.6 v 10.7 c 0,1.2 1.2,2 2.2,1.4 L 11,14.1 v 3.2 c 0,1.2 1.2,2 2.2,1.4 l 9,-5.4 c 1.1,-0.5 1.1,-2.1 0,-2.7 z"
              id="path97" />
@@ -700,25 +708,27 @@
     </g>
     <g
        id="g296"
-       transform="translate(335.84723,10.942675)"
+       transform="translate(331.08872,-5.4139064)"
        inkscape:export-xdpi="101.6"
        inkscape:export-ydpi="101.6"
-       inkscape:export-filename="/media/eric/PKBACK# 001/IPA_/GUI/Final/play.png">
+       inkscape:export-filename="./play.png">
       <g
          inkscape:export-ydpi="101.6"
          inkscape:export-xdpi="101.6"
          id="g225"
-         transform="matrix(1.7264066,0,0,1.5307665,86.303216,-94.1509)">
+         transform="matrix(1.7264066,0,0,1.5307665,86.303216,-94.1509)"
+         style="fill:none">
         <g
            id="g223"
-           transform="matrix(1.0224483,0,0,0.94130885,24.679647,11.031667)">
+           transform="matrix(1.0224483,0,0,0.94130885,24.679647,11.031667)"
+           style="fill:none">
           <rect
              id="rect221"
              width="20.689253"
              height="25.286386"
              x="11.884304"
              y="187.96132"
-             style="fill:#4d4d4d;stroke-width:0.37535813"
+             style="fill:none;stroke-width:0.37535813"
              ry="0"
              inkscape:export-xdpi="101.6"
              inkscape:export-ydpi="101.6" />
@@ -726,7 +736,7 @@
              inkscape:export-ydpi="101.6"
              inkscape:export-xdpi="101.6"
              ry="0"
-             style="fill:#4d4d4d;stroke-width:0.37535813"
+             style="fill:none;stroke-width:0.37535813"
              y="187.96132"
              x="11.884304"
              height="25.286386"
@@ -738,7 +748,7 @@
              height="25.286386"
              x="11.884304"
              y="187.96132"
-             style="fill:#4d4d4d;stroke-width:0.37535813"
+             style="fill:none;stroke-width:0.37535813"
              ry="0"
              inkscape:export-xdpi="101.6"
              inkscape:export-ydpi="101.6" />
@@ -747,7 +757,7 @@
       <path
          inkscape:export-ydpi="101.6"
          inkscape:export-xdpi="101.6"
-         style="fill:#ff0000;stroke-width:0.08438537"
+         style="fill:#3498db;fill-opacity:1;stroke-width:0.08438537"
          inkscape:connector-curvature="0"
          d="m 180.73807,209.84257 -23.49289,-13.98266 c -0.2869,-0.16876 -0.58226,-0.27003 -0.9198,-0.27003 -0.9198,0 -1.67083,0.75947 -1.67083,1.68771 h -0.008 v 29.02856 h 0.008 c 0,0.92824 0.75103,1.68771 1.67083,1.68771 0.34598,0 0.6329,-0.11814 0.94512,-0.2869 l 23.46757,-13.96578 c 0.55694,-0.46412 0.91136,-1.16452 0.91136,-1.94931 0,-0.78478 -0.35442,-1.47673 -0.91136,-1.9493 z"
          id="path227" />
@@ -755,38 +765,29 @@
     <g
        id="g5322"
        transform="translate(440.38719,19.495295)"
-       inkscape:export-filename="/media/eric/PKBACK# 001/IPA_/GUI/Final/pause.png"
+       inkscape:export-filename="./pause.png"
        inkscape:export-xdpi="101.6"
        inkscape:export-ydpi="101.6">
       <g
-         transform="matrix(1.7264066,0,0,1.5307665,18.283122,-102.70352)"
-         id="g241"
-         inkscape:export-xdpi="101.6"
-         inkscape:export-ydpi="101.6"
-         style="fill:#4d4d4d;fill-opacity:1">
-        <g
-           transform="matrix(1.0224483,0,0,0.94130885,24.679647,11.031667)"
-           id="g239"
-           style="fill:#4d4d4d;fill-opacity:1">
-          <rect
-             inkscape:export-ydpi="101.6"
-             inkscape:export-xdpi="101.6"
-             ry="0"
-             style="fill:#4d4d4d;fill-opacity:1;stroke-width:0.37535813"
-             y="187.96132"
-             x="11.884304"
-             height="25.286386"
-             width="20.689253"
-             id="rect237" />
-        </g>
+         id="g4701">
+        <rect
+           id="rect237"
+           width="36.519871"
+           height="36.435764"
+           x="81.867943"
+           y="185.02138"
+           style="fill:none;fill-opacity:1;stroke-width:0.59863019"
+           ry="0"
+           inkscape:export-xdpi="101.6"
+           inkscape:export-ydpi="101.6" />
+        <path
+           id="path243"
+           d="m 85.424613,217.23696 v -27.99543 q 0,-0.51695 0.363749,-0.89474 0.363757,-0.37777 0.861526,-0.37777 h 9.802176 q 0.497769,0 0.861518,0.37777 0.363757,0.37779 0.363757,0.89474 v 27.99543 q 0,0.51696 -0.363757,0.89475 -0.363749,0.37777 -0.861518,0.37777 h -9.802176 q -0.497769,0 -0.861526,-0.37777 -0.363749,-0.37779 -0.363749,-0.89475 z m 17.153817,0 v -27.99543 q 0,-0.51695 0.36375,-0.89474 0.36375,-0.37777 0.86152,-0.37777 h 9.80218 q 0.49776,0 0.86152,0.37777 0.36375,0.37779 0.36375,0.89474 v 27.99543 q 0,0.51696 -0.36375,0.89475 -0.36376,0.37777 -0.86152,0.37777 h -9.80218 q -0.49777,0 -0.86152,-0.37777 -0.36375,-0.37779 -0.36375,-0.89475 z"
+           inkscape:connector-curvature="0"
+           style="fill:#3498db;stroke-width:0.01951051;fill-opacity:1"
+           inkscape:export-xdpi="101.6"
+           inkscape:export-ydpi="101.6" />
       </g>
-      <path
-         inkscape:export-ydpi="101.6"
-         inkscape:export-xdpi="101.6"
-         style="fill:#ff0000;stroke-width:0.01951051"
-         inkscape:connector-curvature="0"
-         d="m 85.424613,217.23696 v -27.99543 q 0,-0.51695 0.363749,-0.89474 0.363757,-0.37777 0.861526,-0.37777 h 9.802176 q 0.497769,0 0.861518,0.37777 0.363757,0.37779 0.363757,0.89474 v 27.99543 q 0,0.51696 -0.363757,0.89475 -0.363749,0.37777 -0.861518,0.37777 h -9.802176 q -0.497769,0 -0.861526,-0.37777 -0.363749,-0.37779 -0.363749,-0.89475 z m 17.153817,0 v -27.99543 q 0,-0.51695 0.36375,-0.89474 0.36375,-0.37777 0.86152,-0.37777 h 9.80218 q 0.49776,0 0.86152,0.37777 0.36375,0.37779 0.36375,0.89474 v 27.99543 q 0,0.51696 -0.36375,0.89475 -0.36376,0.37777 -0.86152,0.37777 h -9.80218 q -0.49777,0 -0.86152,-0.37777 -0.36375,-0.37779 -0.36375,-0.89475 z"
-         id="path243" />
     </g>
     <g
        inkscape:export-ydpi="101.6"
@@ -872,54 +873,65 @@
       </g>
     </g>
     <g
-       id="g5275"
-       transform="translate(47.281983,-39.272189)">
+       transform="translate(12.534888,-10.961319)"
+       id="g3937-2"
+       inkscape:export-xdpi="101.6"
+       inkscape:export-ydpi="101.6"
+       style="fill:none"
+       inkscape:export-filename="./Song_List.png">
       <g
-         inkscape:export-ydpi="101.6"
-         inkscape:export-xdpi="101.6"
-         id="g3937-2"
-         transform="translate(-34.747095,28.31087)">
-        <g
-           id="use3885-9"
-           transform="translate(24.946429)">
-          <rect
-             id="rect3925-4"
-             width="20.998878"
-             height="22.40815"
-             x="10.961309"
-             y="187.96132"
-             style="fill:#4d4d4d;stroke-width:0.35598451"
-             ry="0"
-             inkscape:export-xdpi="101.6"
-             inkscape:export-ydpi="101.6" />
-        </g>
+         transform="translate(24.946429)"
+         id="use3885-9"
+         style="fill:none">
+        <rect
+           inkscape:export-ydpi="101.6"
+           inkscape:export-xdpi="101.6"
+           ry="0"
+           style="fill:none;stroke-width:0.35598451"
+           y="187.96132"
+           x="10.961309"
+           height="22.40815"
+           width="20.998878"
+           id="rect3925-4" />
       </g>
-      <path
-         id="path328"
-         d="m 5.252796,217.86534 c -1.0110696,0 -1.830653,0.82379 -1.830653,1.83065 v 7.32261 3.66131 5.49196 c 0,1.00686 0.8195834,1.83065 1.830653,1.83065 h 12.814571 c 1.011436,0 1.830653,-0.82379 1.830653,-1.83065 v -5.49196 -3.66131 -3.6613 l -5.491959,-5.49196 z"
-         inkscape:connector-curvature="0"
-         style="fill:#95a5a6;stroke-width:0.91532654" />
-      <path
-         id="path330"
-         d="m 5.252796,216.95001 c -1.0110696,0 -1.830653,0.82379 -1.830653,1.83065 v 7.32261 3.66131 5.49196 c 0,1.00686 0.8195834,1.83065 1.830653,1.83065 h 12.814571 c 1.011436,0 1.830653,-0.82379 1.830653,-1.83065 v -5.49196 -3.66131 -3.6613 l -5.491959,-5.49196 z"
-         inkscape:connector-curvature="0"
-         style="fill:#bdc3c7;stroke-width:0.91532654" />
-      <g
-         transform="matrix(0.91532652,0,0,0.91532652,0.67616344,-725.28711)"
-         id="g334"
-         style="fill:#3498db">
-        <path
-           id="path332"
-           d="m 16.996,1035.1 v 8.8 c 0,0.2 -0.088,0.5 -0.266,0.7 -0.177,0.2 -0.401,0.3 -0.671,0.4 -0.271,0.1 -0.542,0.2 -0.813,0.3 -0.266,0 -0.516,0.1 -0.75,0.1 -0.234,0 -0.487,-0.1 -0.758,-0.1 -0.265,-0.1 -0.534,-0.2 -0.804,-0.3 -0.271,-0.1 -0.495,-0.2 -0.672,-0.4 -0.177,-0.2 -0.266,-0.5 -0.266,-0.7 0,-0.3 0.089,-0.5 0.266,-0.7 0.177,-0.2 0.401,-0.4 0.672,-0.5 0.27,-0.1 0.539,-0.2 0.804,-0.3 h 0.758 c 0.547,0 1.047,0.1 1.5,0.3 v -4.2 l -5.9999,1.8 v 5.6 c 0,0.2 -0.0886,0.5 -0.2656,0.7 -0.1771,0.2 -0.4011,0.3 -0.6719,0.4 -0.2708,0.1 -0.5417,0.2 -0.8125,0.3 -0.2656,0 -0.5156,0.1 -0.75,0.1 -0.2344,0 -0.487,-0.1 -0.7578,-0.1 -0.2656,-0.1 -0.5339,-0.2 -0.8047,-0.3 -0.2708,-0.1 -0.4948,-0.2 -0.6719,-0.4 -0.1771,-0.2 -0.2656,-0.5 -0.2656,-0.7 0,-0.3 0.0885,-0.5 0.2656,-0.7 0.1771,-0.2 0.4011,-0.4 0.6719,-0.5 0.2708,-0.1 0.5391,-0.2 0.8047,-0.3 h 0.7578 c 0.5469,0 1.0469,0.1 1.5,0.3 v -7.6 c 0,-0.1 0.0495,-0.3 0.1484,-0.4 0.099,-0.2 0.2266,-0.3 0.3828,-0.3 l 6.4997,-2 h 0.219 c 0.208,0 0.385,0 0.531,0.2 0.146,0.1 0.219,0.3 0.219,0.5"
-           inkscape:connector-curvature="0"
-           style="fill:#3498db" />
-      </g>
-      <path
-         id="path336"
-         d="m 19.89802,222.44197 -5.491959,-5.49196 v 3.66131 c 0,1.00685 0.819217,1.83065 1.830653,1.83065 z"
-         inkscape:connector-curvature="0"
-         style="fill:#95a5a6;stroke-width:0.91532654" />
     </g>
+    <path
+       style="fill:#95a5a6;stroke-width:0.91532654"
+       inkscape:connector-curvature="0"
+       d="m 52.534779,178.59315 c -1.01107,0 -1.830653,0.82379 -1.830653,1.83065 v 7.32261 3.66131 5.49196 c 0,1.00686 0.819583,1.83065 1.830653,1.83065 H 65.34935 c 1.011436,0 1.830653,-0.82379 1.830653,-1.83065 v -5.49196 -3.66131 -3.6613 l -5.491959,-5.49196 z"
+       id="path328"
+       inkscape:export-filename="./Song_List.png"
+       inkscape:export-xdpi="101"
+       inkscape:export-ydpi="101" />
+    <path
+       style="fill:#bdc3c7;stroke-width:0.91532654"
+       inkscape:connector-curvature="0"
+       d="m 52.534779,177.67782 c -1.01107,0 -1.830653,0.82379 -1.830653,1.83065 v 7.32261 3.66131 5.49196 c 0,1.00686 0.819583,1.83065 1.830653,1.83065 H 65.34935 c 1.011436,0 1.830653,-0.82379 1.830653,-1.83065 v -5.49196 -3.66131 -3.6613 l -5.491959,-5.49196 z"
+       id="path330"
+       inkscape:export-filename="./Song_List.png"
+       inkscape:export-xdpi="101"
+       inkscape:export-ydpi="101" />
+    <g
+       style="fill:#3498db"
+       id="g334"
+       transform="matrix(0.91532652,0,0,0.91532652,47.958146,-764.5593)"
+       inkscape:export-filename="./Song_List.png"
+       inkscape:export-xdpi="101"
+       inkscape:export-ydpi="101">
+      <path
+         style="fill:#3498db"
+         inkscape:connector-curvature="0"
+         d="m 16.996,1035.1 v 8.8 c 0,0.2 -0.088,0.5 -0.266,0.7 -0.177,0.2 -0.401,0.3 -0.671,0.4 -0.271,0.1 -0.542,0.2 -0.813,0.3 -0.266,0 -0.516,0.1 -0.75,0.1 -0.234,0 -0.487,-0.1 -0.758,-0.1 -0.265,-0.1 -0.534,-0.2 -0.804,-0.3 -0.271,-0.1 -0.495,-0.2 -0.672,-0.4 -0.177,-0.2 -0.266,-0.5 -0.266,-0.7 0,-0.3 0.089,-0.5 0.266,-0.7 0.177,-0.2 0.401,-0.4 0.672,-0.5 0.27,-0.1 0.539,-0.2 0.804,-0.3 h 0.758 c 0.547,0 1.047,0.1 1.5,0.3 v -4.2 l -5.9999,1.8 v 5.6 c 0,0.2 -0.0886,0.5 -0.2656,0.7 -0.1771,0.2 -0.4011,0.3 -0.6719,0.4 -0.2708,0.1 -0.5417,0.2 -0.8125,0.3 -0.2656,0 -0.5156,0.1 -0.75,0.1 -0.2344,0 -0.487,-0.1 -0.7578,-0.1 -0.2656,-0.1 -0.5339,-0.2 -0.8047,-0.3 -0.2708,-0.1 -0.4948,-0.2 -0.6719,-0.4 -0.1771,-0.2 -0.2656,-0.5 -0.2656,-0.7 0,-0.3 0.0885,-0.5 0.2656,-0.7 0.1771,-0.2 0.4011,-0.4 0.6719,-0.5 0.2708,-0.1 0.5391,-0.2 0.8047,-0.3 h 0.7578 c 0.5469,0 1.0469,0.1 1.5,0.3 v -7.6 c 0,-0.1 0.0495,-0.3 0.1484,-0.4 0.099,-0.2 0.2266,-0.3 0.3828,-0.3 l 6.4997,-2 h 0.219 c 0.208,0 0.385,0 0.531,0.2 0.146,0.1 0.219,0.3 0.219,0.5"
+         id="path332" />
+    </g>
+    <path
+       style="fill:#95a5a6;stroke-width:0.91532654"
+       inkscape:connector-curvature="0"
+       d="m 67.180003,183.16978 -5.491959,-5.49196 v 3.66131 c 0,1.00685 0.819217,1.83065 1.830653,1.83065 z"
+       id="path336"
+       inkscape:export-filename="./Song_List.png"
+       inkscape:export-xdpi="101"
+       inkscape:export-ydpi="101" />
     <g
        inkscape:export-ydpi="101.6"
        inkscape:export-xdpi="101.6"
@@ -1266,22 +1278,25 @@
          id="g5750-7"
          transform="matrix(1.6828657,0,0,-1.8709742,-207.4473,669.98577)"
          inkscape:export-xdpi="101.6"
-         inkscape:export-ydpi="101.6">
+         inkscape:export-ydpi="101.6"
+         style="fill:none">
         <g
            inkscape:export-ydpi="101.6"
            inkscape:export-xdpi="101.6"
            id="g5748-5"
-           transform="matrix(0.532432,0,0,0.47209566,165.34937,120.61758)">
+           transform="matrix(0.532432,0,0,0.47209566,165.34937,120.61758)"
+           style="fill:none">
           <g
              id="g5746-9"
-             transform="matrix(1.0224483,0,0,0.94130885,24.679647,11.031667)">
+             transform="matrix(1.0224483,0,0,0.94130885,24.679647,11.031667)"
+             style="fill:none">
             <rect
                id="rect5740-2"
                width="20.689253"
                height="25.286386"
                x="11.884304"
                y="187.96132"
-               style="fill:#4d4d4d;stroke-width:0.37535813"
+               style="fill:none;stroke-width:0.37535813"
                ry="0"
                inkscape:export-xdpi="101.6"
                inkscape:export-ydpi="101.6" />
@@ -1289,7 +1304,7 @@
                inkscape:export-ydpi="101.6"
                inkscape:export-xdpi="101.6"
                ry="0"
-               style="fill:#4d4d4d;stroke-width:0.37535813"
+               style="fill:none;stroke-width:0.37535813"
                y="187.96132"
                x="11.884304"
                height="25.286386"
@@ -1301,7 +1316,7 @@
                height="25.286386"
                x="11.884304"
                y="187.96132"
-               style="fill:#4d4d4d;stroke-width:0.37535813"
+               style="fill:none;stroke-width:0.37535813"
                ry="0"
                inkscape:export-xdpi="101.6"
                inkscape:export-ydpi="101.6" />
@@ -1441,20 +1456,23 @@
          inkscape:export-xdpi="101.6"
          inkscape:export-filename="/media/eric/PKBACK# 001/IPA_/GUI/Final/musik_1.png"
          transform="matrix(3.026331,0,0,2.9682233,-106.15101,-747.04082)"
-         id="g5316">
+         id="g5316"
+         style="fill:none">
         <g
            transform="matrix(0.84443874,0,0,-0.81301945,52.835948,528.29089)"
            id="g5748-7"
            inkscape:export-xdpi="101.6"
-           inkscape:export-ydpi="101.6">
+           inkscape:export-ydpi="101.6"
+           style="fill:none">
           <g
              transform="matrix(1.0224483,0,0,0.94130885,24.679647,11.031667)"
-             id="g5746-3">
+             id="g5746-3"
+             style="fill:none">
             <rect
                inkscape:export-ydpi="101.6"
                inkscape:export-xdpi="101.6"
                ry="0"
-               style="fill:#4d4d4d;stroke-width:0.37535813"
+               style="fill:none;stroke-width:0.37535813"
                y="187.96132"
                x="11.884304"
                height="25.286386"
@@ -1466,7 +1484,7 @@
                height="25.286386"
                x="11.884304"
                y="187.96132"
-               style="fill:#4d4d4d;stroke-width:0.37535813"
+               style="fill:none;stroke-width:0.37535813"
                ry="0"
                inkscape:export-xdpi="101.6"
                inkscape:export-ydpi="101.6" />
@@ -1474,7 +1492,7 @@
                inkscape:export-ydpi="101.6"
                inkscape:export-xdpi="101.6"
                ry="0"
-               style="fill:#4d4d4d;stroke-width:0.37535813"
+               style="fill:none;stroke-width:0.37535813"
                y="187.96132"
                x="11.884304"
                height="25.286386"
@@ -2925,6 +2943,101 @@
          cy="156.95325"
          rx="2.1497395"
          ry="2.1497402" />
+    </g>
+    <g
+       inkscape:export-ydpi="101.6"
+       inkscape:export-xdpi="101.6"
+       inkscape:export-filename="./next_1.png"
+       transform="rotate(-180,276.99912,278.09761)"
+       id="g4723">
+      <g
+         style="fill:none"
+         id="g4713"
+         transform="matrix(-1.7391344,0,0,-1.6260053,56.535971,606.69703)">
+        <rect
+           id="rect4711"
+           width="20.998878"
+           height="22.40815"
+           x="10.961309"
+           y="187.96132"
+           style="fill:none;stroke-width:0.35598451"
+           ry="0"
+           inkscape:export-xdpi="101.6"
+           inkscape:export-ydpi="101.6" />
+      </g>
+      <g
+         style="fill:#3498db;fill-opacity:1"
+         id="g4721"
+         transform="matrix(-1.4423414,0,0,1.4423414,36.538971,265.61706)">
+        <g
+           style="fill:#3498db;fill-opacity:1"
+           id="g4715" />
+        <g
+           style="fill:#3498db;fill-opacity:1"
+           id="g4719">
+          <path
+             id="path4717"
+             d="m 22.2,10.6 -9,-5.4 C 12.2,4.6 11,5.4 11,6.6 V 9.8 L 3.2,5.2 C 2.2,4.6 1,5.4 1,6.6 v 10.7 c 0,1.2 1.2,2 2.2,1.4 L 11,14.1 v 3.2 c 0,1.2 1.2,2 2.2,1.4 l 9,-5.4 c 1.1,-0.5 1.1,-2.1 0,-2.7 z"
+             inkscape:connector-curvature="0"
+             style="fill:#3498db;fill-opacity:1" />
+        </g>
+      </g>
+    </g>
+    <g
+       inkscape:export-filename="./play_pos.png"
+       inkscape:export-ydpi="101.6"
+       inkscape:export-xdpi="101.6"
+       transform="rotate(-90,288.71902,109.70182)"
+       id="g4737">
+      <g
+         style="fill:none"
+         transform="matrix(1.7264066,0,0,1.5307665,86.303216,-94.1509)"
+         id="g4733"
+         inkscape:export-xdpi="101.6"
+         inkscape:export-ydpi="101.6">
+        <g
+           style="fill:none"
+           transform="matrix(1.0224483,0,0,0.94130885,24.679647,11.031667)"
+           id="g4731">
+          <rect
+             inkscape:export-ydpi="101.6"
+             inkscape:export-xdpi="101.6"
+             ry="0"
+             style="fill:none;stroke-width:0.37535813"
+             y="187.96132"
+             x="11.884304"
+             height="25.286386"
+             width="20.689253"
+             id="rect4725" />
+          <rect
+             id="rect4727"
+             width="20.689253"
+             height="25.286386"
+             x="11.884304"
+             y="187.96132"
+             style="fill:none;stroke-width:0.37535813"
+             ry="0"
+             inkscape:export-xdpi="101.6"
+             inkscape:export-ydpi="101.6" />
+          <rect
+             inkscape:export-ydpi="101.6"
+             inkscape:export-xdpi="101.6"
+             ry="0"
+             style="fill:none;stroke-width:0.37535813"
+             y="187.96132"
+             x="11.884304"
+             height="25.286386"
+             width="20.689253"
+             id="rect4729" />
+        </g>
+      </g>
+      <path
+         id="path4735"
+         d="m 180.73807,209.84257 -23.49289,-13.98266 c -0.2869,-0.16876 -0.58226,-0.27003 -0.9198,-0.27003 -0.9198,0 -1.67083,0.75947 -1.67083,1.68771 h -0.008 v 29.02856 h 0.008 c 0,0.92824 0.75103,1.68771 1.67083,1.68771 0.34598,0 0.6329,-0.11814 0.94512,-0.2869 l 23.46757,-13.96578 c 0.55694,-0.46412 0.91136,-1.16452 0.91136,-1.94931 0,-0.78478 -0.35442,-1.47673 -0.91136,-1.9493 z"
+         inkscape:connector-curvature="0"
+         style="fill:#3498db;fill-opacity:1;stroke-width:0.08438537"
+         inkscape:export-xdpi="101.6"
+         inkscape:export-ydpi="101.6" />
     </g>
   </g>
 </svg>
