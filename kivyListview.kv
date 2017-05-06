@@ -44,12 +44,12 @@
                 source: 'img/musik_1.png'
                 on_press: app.show_player()
             ButtonImage:
-                source: 'img/clock_1.png'
+                source: 'img/home.png'
                 on_press:
                     app.show_clock()
 
 
-<PageScreen>:
+<PlayerScreen>:
     FloatLayout:
         BoxLayout:
             size: root.size
@@ -71,7 +71,7 @@
                 size_hint_y: 0.15
                 ButtonImage:
                     size_hint_x: .2
-                    source: 'img/Song_List.png'
+                    source: 'img/song_list.png'
                     on_press:
                         app.stop_and_return()
                 ButtonImage:
@@ -171,8 +171,18 @@
         ButtonImage:
             size: 50,50
             size_hint: None, None
-            source: 'img/musik_1.png'
-            on_press: app.show_player()
+            source: 'img/song_list.png'
+            on_press: app.stop_and_return()
+
+    AnchorLayout:
+        anchor_x: 'right'
+        anchor_y: 'top'
+        padding: 10
+        ButtonImage:
+            size: 50,50
+            size_hint: None, None
+            source: 'img/clock_1.png'
+            on_press: app.show_alarms()
 
     FloatLayout:
         id: face

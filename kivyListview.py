@@ -9,7 +9,7 @@ from math import cos, sin, pi
 from kivy.clock import Clock
 from kivy.lang import Builder
 import vlc
-from os import path, walk
+from os import path, walk, system
 import datetime
 from kivy.config import Config
 from extendedsettings import ExtendedSettings
@@ -136,7 +136,7 @@ class MenuPageScreen(Screen):
         }
 
 
-class PageScreen(Screen):
+class PlayerScreen(Screen):
     labelImage = StringProperty('img/pause.png')
     index = NumericProperty(0)
     songTitle = StringProperty(' ')
@@ -196,6 +196,7 @@ class PageScreen(Screen):
     def set_volume(self, volume):
         player.audio_set_volume(int(volume))
         self.playVolume = volume
+        # App.config.set('Base','startupvolume',int(volume))
 
     def update_time(self, *args):
         if self.media is None:
@@ -256,16 +257,18 @@ class RadioPyApp(App):
         sub = self.config.get('Base', 'boolsub_folders') == u'1'
         load_media(media_path,sub)
         sm = ScreenManager(transition=SwapTransition(direction='right'))
+        self.clockScreen = ClockScreen(name='clock')
+        sm.add_widget(self.clockScreen)
         self.menuScreen = MenuPageScreen(name='menu')
         sm.add_widget(self.menuScreen)
         self.data = media_list
-        self.playScreen = PageScreen(name='play')
+        self.playScreen = PlayerScreen(name='play')
         self.playScreen.index = 0
-
+        self.playScreen.playVolume = self.config.get('Base','startupvolume')
         sm.add_widget(self.playScreen)
-        self.clockScreen = ClockScreen(name='clock')
-        sm.add_widget(self.clockScreen)
-        Clock.schedule_interval(self.clockScreen.ticks.update_clock, 0.1)
+
+        Clock.schedule_interval(self.clockScreen.ticks.update_clock, 0.25)
+        # sm.current = 'clock'
         return sm
 
     def build_config(self, config):
@@ -275,6 +278,7 @@ class RadioPyApp(App):
             'mediapath': base_path,
             'runcolor': '#ffffffff',
             'boolsub_folders': 'False',
+            'reboot':'False'
         })
 
     def build_settings(self, settings):
@@ -289,7 +293,13 @@ class RadioPyApp(App):
             folder = self.config.get(section,'mediapath')
             load_media(folder, sub)
             self.data = media_list
-        pass
+        if key=='reboot':
+            self.config.set(section,'reboot','False')
+            self.config.write()
+            if rpi:
+                system('sudo reboot')
+            else:
+                App.get_running_app().stop()
 
     def on_menu_selection(self, index):
         if index != self.last_index:
@@ -307,6 +317,9 @@ class RadioPyApp(App):
 
     def show_player(self):
         self.root.current = 'play'
+
+    def show_alarms(self):
+        pass
 
 if rpi:
     Instance = vlc.Instance('--aout=alsa', '--alsa-audio-device=dmixer')

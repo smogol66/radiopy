@@ -29,6 +29,11 @@ settings_json = json.dumps([
      'desc': 'Color of the lamp',
      'section': 'Base',
      'key': 'runcolor'},
+    {'type': 'bool',
+     'title': 'Force reboot',
+     'desc': 'Quit the application and reboot',
+     'section': 'Base',
+     'key': 'reboot'},
 
     # {'type': 'string',
     #  'title': 'A string setting',
