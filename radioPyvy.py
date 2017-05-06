@@ -49,7 +49,6 @@ def load_media(folder, scan_folders=False):
         media_list = Instance.media_list_new()
 
     media_list.add_media(Instance.media_new('http://stream.srg-ssr.ch/m/rsj/mp3_128'))
-    media_list.add_media(Instance.media_new('http://stream.srg-ssr.ch/m/rsj/mp3_128'))
     media_list.add_media(Instance.media_new('http://streaming.radio.funradio.fr/fun-1-48-192'))
     media_list.add_media(Instance.media_new('http://streaming.radio.rtl2.fr/rtl2-1-44-128'))
     media_list.add_media(Instance.media_new('http://stream.srg-ssr.ch/m/couleur3/mp3_128'))
@@ -278,7 +277,8 @@ class RadioPyApp(App):
             'mediapath': base_path,
             'runcolor': '#ffffffff',
             'boolsub_folders': 'False',
-            'reboot':'False'
+            'shutdown':'False',
+            'reboot':'False',
         })
 
     def build_settings(self, settings):
@@ -294,12 +294,20 @@ class RadioPyApp(App):
             load_media(folder, sub)
             self.data = media_list
         if key=='reboot':
-            self.config.set(section,'reboot','False')
+            self.config.set(section,key,'False')
             self.config.write()
             if rpi:
                 system('sudo reboot')
             else:
                 App.get_running_app().stop()
+        if key=='shutdown':
+            self.config.set(section,key,'False')
+            self.config.write()
+            if rpi:
+                system('sudo shutdown')
+            else:
+                App.get_running_app().stop()
+
 
     def on_menu_selection(self, index):
         if index != self.last_index:
@@ -310,6 +318,12 @@ class RadioPyApp(App):
         self.menuScreen.plays(index)
 
     def stop_and_return(self):
+        sub = self.config.get('Base', 'boolsub_folders')
+        folder = self.config.get('Base', 'mediapath')
+        try:
+            load_media(folder, sub)
+        except UnicodeDecodeError:
+            pass
         self.root.current = 'menu'
 
     def show_clock(self):
