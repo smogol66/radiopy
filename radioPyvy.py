@@ -339,7 +339,7 @@ if not rpi:
     Config.set('graphics', 'width', '800')
     Config.set('graphics', 'height', '480')
 
-Builder.load_file('kivyListview.kv')
+Builder.load_file('radioPyvy.kv')
 
 if __name__ == '__main__':
     RadioPyApp().run()
