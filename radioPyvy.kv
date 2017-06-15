@@ -3,9 +3,41 @@
 #:import ListItemButton kivy.uix.listview.ListItemButton
 #:import math math
 
-<ListItemButton>:
-    selected_color: .5, .3, .55, 1
-    deselected_color: .5, .5, .5, 1
+<MediaSelectable>:
+    # Draw a background to indicate selection
+    canvas.before:
+        Color:
+            rgba: (.0, 0.9, .1, .3) if self.selected else (0, 0, 0, 1)
+        Rectangle:
+            size: self.size
+            pos: self.pos
+
+    # active: True
+    BoxLayout:
+        padding: 5
+        Label:
+            size_hint_x: 0.6
+            text_size: self.size
+            halign: 'left'
+            valign: 'middle'
+            text: root.song_title
+        Label:
+            size_hint_x: 0.15
+            text_size: self.size
+            halign: 'left'
+            valign: 'middle'
+            text: root.artist
+        Label:
+            size_hint_x: 0.2
+            halign: 'left'
+            text: root.type
+
+        ButtonImage:
+            size_hint_x: 0.05
+            source: 'img/play.png'
+            on_press:
+                root.select(root.index)
+                app.on_menu_selection(root.index)
 
 <ButtonImage@ButtonBehavior+Image>
     rel_size: 1
@@ -16,21 +48,23 @@
     size_hint_y: None
     height: dp(40)
     font_size: self.height * 0.6
-
     on_release: app.on_menu_selection(self.index)
 
-<MenuPageScreen>:
+<RVSongScreen>
+    rv: rv
     BoxLayout:
         orientation: 'vertical'
-        ListView:
-            # size_hint: .8,.9
-            adapter:
-                la.ListAdapter(
-                data=app.data,
-                cls=factory.Factory.MenuButton,
-                selection_mode='single',
-                allow_empty_selection=True,
-                args_converter=root.args_converter)
+        RecycleView:
+            id: rv
+            viewclass: 'MediaSelectable'
+            SelectableRecycleBoxLayout:
+                default_size: None, dp(56)
+                default_size_hint: 1, None
+                size_hint_y: None
+                height: self.minimum_height
+                orientation: 'vertical'
+                multiselect: False
+                touch_multiselect: True
         BoxLayout:
             size_hint_y: .15
             padding: (3,5)
@@ -39,15 +73,13 @@
                 on_press: app.open_settings()
             ButtonImage:
                 size: 50,50
-                size_hint_x: 0.8
                 size_hint: None, None
-                source: 'img/musik_1.png'
-                on_press: app.show_player()
+                source: 'img/clock_1.png'
+                on_press: app.show_alarms()
             ButtonImage:
                 source: 'img/home.png'
                 on_press:
                     app.show_clock()
-
 
 <PlayerScreen>:
     FloatLayout:

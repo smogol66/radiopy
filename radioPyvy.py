@@ -1,6 +1,10 @@
-from kivy.uix.listview import ListItemButton
+from kivy.uix.recycleview.views import RecycleDataViewBehavior
+from kivy.uix.recycleboxlayout import RecycleBoxLayout
+from kivy.uix.behaviors import FocusBehavior
+from kivy.uix.recycleview.layout import LayoutSelectionBehavior
+from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.screenmanager import ScreenManager, Screen, SwapTransition
-from kivy.properties import ListProperty, NumericProperty, StringProperty
+from kivy.properties import ListProperty, NumericProperty, StringProperty, BooleanProperty
 from kivy.app import App
 from kivy.uix.widget import Widget
 from kivy.graphics import Color, SmoothLine
@@ -14,6 +18,8 @@ import datetime
 from kivy.config import Config
 from extendedsettings import ExtendedSettings
 from settingsjson import settings_json
+import alarms
+
 
 
 try:
@@ -23,35 +29,50 @@ except ImportError:
     rpi = False
 
 media_list = None
+song_list = []
 
 
 def load_media(folder, scan_folders=False):
 
-    def recursive_walk(start_folder, with_sub_folders):
-        for folderName, sub_folders, file_names in walk(start_folder.encode('utf8')):
-            if folderName != start_folder and not with_sub_folders:
-                return
-            else:
-                print('\nFolder: ' + folderName + '\n')
-            for filename in file_names:
-                if filename.lower().split('.')[-1] in ('mp3','ogg'):
-                    media = Instance.media_new(path.join(folderName, filename))
-                    media_list.add_media(media)
-            if sub_folders:
-                for sub_folder in sub_folders:
-                    recursive_walk(sub_folder, with_sub_folders)
-
     global media_list
+
+    def recursive_walk(start_folder, with_sub_folders):
+        try:
+            for folderName, sub_folders, file_names in walk(start_folder.encode('utf8')):
+                if folderName != start_folder and not with_sub_folders:
+                    return
+                else:
+                    print('\nFolder: ' + folderName + '\n')
+                for filename in file_names:
+                    if filename.lower().split('.')[-1] in ('mp3','ogg'):
+                        media_path = path.join(folderName, filename)
+                        media = Instance.media_new(path.join(folderName, filename))
+                        media_list.add_media(media)
+                        song_list.append({'media_file': media_path, 'type': 'local'})
+
+                if sub_folders:
+                    for sub_folder in sub_folders:
+                        recursive_walk(sub_folder, with_sub_folders)
+        except UnicodeDecodeError:
+            pass
+
+    def add_radio(radio_url):
+        media = Instance.media_new(radio_url)
+        media_list.add_media(media)
+        song_list.append({'media_file': radio_url, 'type': 'radio'})
+
     if media_list:
         media_list.release()
         media_list = Instance.media_list_new()
+        del song_list[:]
     else:
         media_list = Instance.media_list_new()
+        del song_list[:]
 
-    media_list.add_media(Instance.media_new('http://stream.srg-ssr.ch/m/rsj/mp3_128'))
-    media_list.add_media(Instance.media_new('http://streaming.radio.funradio.fr/fun-1-48-192'))
-    media_list.add_media(Instance.media_new('http://streaming.radio.rtl2.fr/rtl2-1-44-128'))
-    media_list.add_media(Instance.media_new('http://stream.srg-ssr.ch/m/couleur3/mp3_128'))
+    add_radio('http://stream.srg-ssr.ch/m/rsj/mp3_128')
+    add_radio('http://streaming.radio.funradio.fr/fun-1-48-192')
+    add_radio('http://streaming.radio.rtl2.fr/rtl2-1-44-128')
+    add_radio('http://stream.srg-ssr.ch/m/couleur3/mp3_128')
 
     recursive_walk(folder, scan_folders)
 
@@ -104,16 +125,38 @@ class ClockScreen(Screen):
         self.ids.label.text = ''
 
 
-class MenuButton(ListItemButton):
-    index = NumericProperty(0)
+class SelectableRecycleBoxLayout(FocusBehavior, LayoutSelectionBehavior,
+                                 RecycleBoxLayout):
+    ''' Adds selection and focus behaviour to the view. '''
+    print ('selected')
 
 
-class MenuPageScreen(Screen):
+class MediaSelectable(RecycleDataViewBehavior, BoxLayout):
+    song_title = StringProperty('')
+    artist = StringProperty('')
+    type = StringProperty('')
+    ''' Add selection support to the Label '''
+    index = None
+    selected = BooleanProperty(False)
+    selectable = BooleanProperty(True)
 
-    def plays(self, index):
-        pass
+    def refresh_view_attrs(self, rv, index, data):
+        ''' Catch and handle the view changes '''
+        self.index = index
+        return super(MediaSelectable, self).refresh_view_attrs(
+            rv, index, data)
 
-    def args_converter(self, row_index, title):
+    def on_touch_down(self, touch):
+        ''' Add selection on touch down '''
+        if super(MediaSelectable, self).on_touch_down(touch):
+            return True
+        if self.collide_point(*touch.pos) and self.selectable:
+            return self.parent.select_with_touch(self.index, touch)
+
+    def apply_selection(self, rv, index, is_selected):
+        ''' Respond to the selection of items in the view. '''
+        self.selected = is_selected
+        title = media_list[index]
         title.parse()
         if title.is_parsed():
             song_title = ''
@@ -127,13 +170,22 @@ class MenuPageScreen(Screen):
             except ValueError:
                 pass  # do not print nothing
 
-            text = "{} by {}".format(song_title, song_artist) if song_artist != '' else song_title
-            text = title.get_mrl().replace('%20',' ').split('/')[-1] if text == '' else text
-        return {
-            'index': row_index,
-            'text': text
-        }
+            self.song_title = song_title
+            self.artist = song_artist
 
+        if is_selected:
+           pass
+
+        else:
+            pass
+
+    def select(self, index):
+        self.selected = True
+        self.parent.select_with_touch(self.index)
+
+class RVSongScreen(Screen):
+    def populate(self):
+        self.rv.data = song_list
 
 class PlayerScreen(Screen):
     labelImage = StringProperty('img/pause.png')
@@ -242,12 +294,16 @@ class PlayerScreen(Screen):
             self.next_song()
 
 
+alarms_data = [{'value': 'Alarm \n{} as {}'.format(x,'daily'), 'more': 'daily'} for x in range(2)]
+
 class RadioPyApp(App):
     data = ListProperty()
     playScreen = None
     menuScreen = None
     clockScreen = None
     last_index = -1
+    RVS = None
+    AlarmScr = None
 
     def build(self):
 
@@ -258,13 +314,22 @@ class RadioPyApp(App):
         sm = ScreenManager(transition=SwapTransition(direction='right'))
         self.clockScreen = ClockScreen(name='clock')
         sm.add_widget(self.clockScreen)
-        self.menuScreen = MenuPageScreen(name='menu')
-        sm.add_widget(self.menuScreen)
+        self.RVS = RVSongScreen(name='play_list')
+        self.RVS.populate()
+
+        sm.add_widget(self.RVS)
+
         self.data = media_list
         self.playScreen = PlayerScreen(name='play')
         self.playScreen.index = 0
         self.playScreen.playVolume = self.config.get('Base','startupvolume')
         sm.add_widget(self.playScreen)
+        self.RVS = alarms.RVSScreen(name='alarm_list')
+        self.RVS.populate(alarms_data)
+
+        sm.add_widget(self.RVS)
+        self.AlarmScr = alarms.AlarmScreen(name='alarm')
+        sm.add_widget(self.AlarmScr)
 
         Clock.schedule_interval(self.clockScreen.ticks.update_clock, 0.25)
         # sm.current = 'clock'
@@ -315,7 +380,6 @@ class RadioPyApp(App):
 
         self.playScreen.index = index
         self.root.current = 'play'
-        self.menuScreen.plays(index)
 
     def stop_and_return(self):
         sub = self.config.get('Base', 'boolsub_folders')
@@ -324,7 +388,7 @@ class RadioPyApp(App):
             load_media(folder, sub)
         except UnicodeDecodeError:
             pass
-        self.root.current = 'menu'
+        self.root.current = 'play_list'
 
     def show_clock(self):
         self.root.current = 'clock'
@@ -333,7 +397,41 @@ class RadioPyApp(App):
         self.root.current = 'play'
 
     def show_alarms(self):
-        pass
+        self.root.current = 'alarm_list'
+
+    def alarm_edit(self,index, more):
+        self.AlarmScr.index = index
+        self.AlarmScr.AlarmType = more
+        if more=='daily':
+            self.AlarmScr.ids.daily.state='down'
+        else:
+            self.AlarmScr.ids.single.state = 'down'
+        self.root.current='alarm'
+        print('edit alarm at {} as {}'.format(index, more))
+
+    def alarm_active(self,index, value):
+        if value:
+            print('alarm {} activated'.format(index))
+        else:
+            print('alarm {} disabled'.format(index))
+
+    def add_alarm(self):
+        print('had to add alarm')
+
+    def set_alarm(self,index):
+        print('AlarmType: {} at index {}'.format(self.AlarmScr.AlarmType, index))
+
+        self.RVS.update('Alarm \n{}:{} as {}'.format(self.AlarmScr.Hour,
+                                                     self.AlarmScr.Minute,
+                                                     self.AlarmScr.AlarmType),
+                        self.AlarmScr.AlarmType,index)
+        days = self.AlarmScr.Days
+        print(days)
+        self.root.current = 'alarm_list'
+
+    def cancel(self):
+        self.root.current = 'alarm_list'
+
 
 if rpi:
     Instance = vlc.Instance('--aout=alsa', '--alsa-audio-device=dmixer')
@@ -354,6 +452,7 @@ if not rpi:
     Config.set('graphics', 'height', '480')
 
 Builder.load_file('radioPyvy.kv')
+Builder.load_file('alarms.kv')
 
 if __name__ == '__main__':
     RadioPyApp().run()
