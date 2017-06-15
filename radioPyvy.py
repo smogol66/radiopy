@@ -340,6 +340,7 @@ class RadioPyApp(App):
             'startupvolume': 100,
             'baselamp': 'off',
             'mediapath': base_path,
+            'brightness': 255,
             'runcolor': '#ffffffff',
             'boolsub_folders': 'False',
             'shutdown':'False',
@@ -353,6 +354,7 @@ class RadioPyApp(App):
 
     def on_config_change(self, config, section,
                          key, value):
+        print('entering config key:{}'.format(key))
         if key=='mediapath' or key=='boolsub_folders':
             sub = self.config.get(section,'boolsub_folders')
             folder = self.config.get(section,'mediapath')
@@ -372,6 +374,16 @@ class RadioPyApp(App):
                 system('sudo shutdown')
             else:
                 App.get_running_app().stop()
+        if key=='brightness':
+            val = int(self.config.get(section,'brightness'))
+            print('value is {}'.format(val))
+            if val >= 7 and val <= 255:
+                if rpi:
+                    system('sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
+                else:
+                    print('call to: sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
+                self.config.write()
+
 
 
     def on_menu_selection(self, index):

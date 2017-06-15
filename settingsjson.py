@@ -18,6 +18,11 @@ settings_json = json.dumps([
      'desc': 'Scan sub-folders to laod medias',
      'section': 'Base',
      'key': 'boolsub_folders'},
+    {'type': 'numeric',
+     'title': 'Screen brightness',
+     'desc': 'Default brightness at boot',
+     'section': 'Base',
+     'key': 'brightness'},
     {'type': 'options',
      'title': 'Base lamp',
      'desc': 'Behaviour of the base lamp',
@@ -29,6 +34,8 @@ settings_json = json.dumps([
      'desc': 'Color of the lamp',
      'section': 'Base',
      'key': 'runcolor'},
+
+
     {'type': 'bool',
      'title': 'Power down',
      'desc': 'Quit the application and shutdown',
