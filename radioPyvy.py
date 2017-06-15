@@ -326,6 +326,11 @@ class RadioPyApp(App):
         sm.add_widget(self.playScreen)
         self.RVS = alarms.RVSScreen(name='alarm_list')
         self.RVS.populate(alarms_data)
+        val = self.config.get('Base','brightness')
+        if rpi:
+            system('sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
+        else:
+            print('call to: sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
 
         sm.add_widget(self.RVS)
         self.AlarmScr = alarms.AlarmScreen(name='alarm')
