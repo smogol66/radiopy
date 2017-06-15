@@ -377,6 +377,7 @@ class RadioPyApp(App):
             self.config.write()
             if rpi:
                 system('sudo shutdown')
+                App.get_running_app().stop()
             else:
                 App.get_running_app().stop()
         if key=='brightness':
