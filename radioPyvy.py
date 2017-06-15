@@ -377,14 +377,21 @@ class RadioPyApp(App):
         if key=='brightness':
             val = int(self.config.get(section,'brightness'))
             print('value is {}'.format(val))
-            if val >= 7 and val <= 255:
-                if rpi:
-                    system('sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
-                else:
-                    print('call to: sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
+            if val < 7:
+                self.config.set(section, key, 7)
                 self.config.write()
+                val = 7
+            if val > 255:
+                self.config.set(section, key, 255)
+                self.config.write()
+                val = 255
 
-
+            self.config.write()
+            if rpi:
+                system('sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
+            else:
+                print('call to: sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
+            config.read("radiopy.ini")
 
     def on_menu_selection(self, index):
         if index != self.last_index:
