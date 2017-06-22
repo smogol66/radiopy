@@ -43,7 +43,8 @@ def load_media(folder, scan_folders=False):
                 if folderName != start_folder and not with_sub_folders:
                     return
                 else:
-                    print('\nFolder: ' + folderName + '\n')
+                    #print('\nFolder: ' + folderName + '\n')
+                    pass
                 for filename in file_names:
                     if filename.lower().split('.')[-1] in ('mp3','ogg'):
                         media_path = path.join(folderName, filename)
@@ -353,8 +354,7 @@ class SongPopup(Popup):
     def populate(self):
         self.rv.data = song_list
 
-alarms_data = [{'value': 'Alarm \n{} as {}'.format(x,'daily'), 'more': 'daily'} for x in range(2)]
-
+alarms_data = [alarms.Alarm(),alarms.Alarm(atype=alarms.AlarmTypes.daily,alarm_time='10:00')]
 
 class RadioPyApp(App):
     songsData = ListProperty()
@@ -443,7 +443,9 @@ class RadioPyApp(App):
         self.BlankSchedule = Clock.schedule_once(self.blank_screen, 20)
 
     def check_alarms(self,*args):
-        print ('alarm check')
+        for index, alarm in enumerate(alarms_data):
+            print('alarm {} : {}'.format(index, alarm.check_to_do()))
+
 
     def build_config(self, config):
         config.setdefaults('Base', {
@@ -551,10 +553,17 @@ class RadioPyApp(App):
     def set_alarm(self,index):
         print('AlarmType: {} at index {}'.format(self.alarmScr.AlarmType, index))
 
-        self.RVS.update('Alarm \n{}:{} as {}'.format(self.alarmScr.Hour,
-                                                     self.alarmScr.Minute,
-                                                     self.alarmScr.AlarmType),
-                        self.alarmScr.AlarmType, index)
+        if self.alarmScr.AlarmType == 'daily':
+            alarms_data[index].update_daily_alarm(self.alarmScr.Hour,
+                                            self.alarmScr.Minute,
+                                            self.alarmScr.Days)
+        elif self.alarmScr.AlarmType == 'single':
+            alarms_data[index].update_single_alarm(self.alarmScr.Hour,
+                                            self.alarmScr.Minute,
+                                            self.alarmScr.Day,
+                                            self.alarmScr.Month)
+
+
         days = self.alarmScr.Days
         print(days)
         self.root.current = 'alarm_list'

@@ -9,8 +9,9 @@ from kivy.uix.recycleview.layout import LayoutSelectionBehavior
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.screenmanager import ScreenManager, Screen, SwapTransition
 from kivy.properties import ListProperty, NumericProperty, StringProperty
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 from enum import Enum
+from copy import copy
 
 AlarmStates = Enum('AlarmsStates','wait alarm resumed stop end')
 AlarmTypes  = Enum('AlarmTypes', 'single daily')
@@ -37,22 +38,27 @@ class Alarm:
         try:
             if atype == AlarmTypes.daily:
                 mytime = datetime.now()
-                altime = datetime.strptime(alarm_time, '%H:%M')
+                altime = datetime.combine(mytime.date(),datetime.strptime(alarm_time, '%H:%M').time())
+                if mytime >= altime:
+                    # if alarm in the past, set it in the future
+                    altime = altime + timedelta(days=1)
                 self.daysToWakeUp=range(7)
             if atype == AlarmTypes.single:
-                altime = datetime.strptime(alarm_time, '%H:%M %d/%m/%Y')
+                altime = datetime.strptime(alarm_time, '%H:%M %d/%m')
+                if altime >= altime:
+                    altime = altime + timedelta(year=1)
             self.alarmDateTime = self.timeToWakeUp = altime
         except (IndexError, TypeError, ValueError):
             raise ValueError('Bad date or time conversion')
 
     def set_days(self, days=[]):
-        self.daysToWakeUp = days
+        self.daysToWakeUp = copy(days)
 
     def check_to_do(self):
         mytime = datetime.now()
         if self.state == AlarmStates.wait:
             if self.alarmType == AlarmTypes.daily:
-                if mytime.time() >= self.timeToWakeUp.time() and mytime.weekday() in self.daysToWakeUp:
+                if mytime >= self.timeToWakeUp and mytime.weekday() in self.daysToWakeUp:
                     if self.skipNext == 0:
                         self.state= AlarmStates.alarm
                     else:
@@ -87,6 +93,29 @@ class Alarm:
 
     def stop_alarm(self):
         self.state = AlarmStates.stop
+
+    def update_daily_alarm(self, hour, minute, days):
+        mytime = datetime.now()
+        altime = datetime.combine(mytime.date(), time(hour=int(hour), minute=int(minute)))
+        if mytime >= altime:
+            # if alarm in the past, set it in the future
+            altime = altime + timedelta(days=1)
+        daysenum = []
+        for daynum,day in enumerate(days):
+            if day==True:
+                daysenum.append(daynum)
+        self.daysToWakeUp = copy(daysenum)
+        self.timeToWakeUp = altime
+
+    def update_single_alarm(self, hour, minute, day, month):
+        mytime = datetime.now()
+        altime = datetime.combine(mytime.date, datetime(month=int(month), day=int(day), hour=int(hour),
+                                                        minute=int(minute)))
+        if altime >= mytime:
+            altime = altime + timedelta(year=1)
+        self.timeToWakeUp = altime
+
+
 
 
 class SelectableRecycleBoxLayout(FocusBehavior, LayoutSelectionBehavior,
@@ -124,11 +153,23 @@ class SelectableLabel(RecycleDataViewBehavior, BoxLayout):
         else:
             print("selection removed for {0}".format(rv.data[index]))
 
+data_list = []
+
 
 class RVSAlarmScreen(Screen):
+
     def populate(self,database):
-        if type(datetime)=='list':
-            self.rv.data = database
+
+        if type(database) is list:
+            if isinstance(database[0],Alarm):
+                # populathe the data with the values dictionaryy of alarm list
+                del data_list [:]
+                for alarm in database:
+                    print (alarm.alarmType, alarm.alarmDateTime)
+                    data_list.append({'value':datetime.strftime(alarm.alarmDateTime,'%H:%M'),\
+                                      'more':'daily' if alarm.alarmType==AlarmTypes.daily else 'once'})
+                self.rv.data=data_list
+
 
     def update(self, value,more, index):
         if self.rv.data:
