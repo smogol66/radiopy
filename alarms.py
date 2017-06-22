@@ -2,7 +2,6 @@ from kivy.app import App
 from kivy.lang import Builder
 from kivy.uix.recycleview import RecycleView
 from kivy.uix.recycleview.views import RecycleDataViewBehavior
-from kivy.uix.label import Label
 from kivy.properties import BooleanProperty
 from kivy.uix.recycleboxlayout import RecycleBoxLayout
 from kivy.uix.behaviors import FocusBehavior
@@ -10,22 +9,84 @@ from kivy.uix.recycleview.layout import LayoutSelectionBehavior
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.screenmanager import ScreenManager, Screen, SwapTransition
 from kivy.properties import ListProperty, NumericProperty, StringProperty
-from datetime import time, date
+from datetime import datetime, timedelta
+from enum import Enum
+
+AlarmStates = Enum('AlarmsStates','wait alarm resumed stop end')
+AlarmTypes  = Enum('AlarmTypes', 'single daily')
 
 
 class Alarm:
-    Type = None
-    StoredTime = None
-    timeToWait = 0
+    """Alarm class to handle all the thing to do with clock alarms"""
+    skipNext = 0
+    type = None
+    state = AlarmStates.wait
+    alarmType = AlarmTypes.daily
+    alarmDateTime = datetime.now()
+    timeToWakeUp = datetime.now()
+    daysToWakeUp = []
+    resumed = -1
+    # resumeDelay= [20,10,5]
+    resumeDelay = [1, 1, 1]
+    media = None
 
-    def __init__(self, type='weekly', alarm_time='08:00', alarm_date=''):
-        self.Type = type
-        if type == 'weekly':
-            a = alarm_time.split(':')
-            self.StoredTime = time(hour = a[0], min= a[1])
-        elif type == 'one':
-            a = alarm_time.split(':') + alarm_date.split("/")
-            self.StoredTime = date(hour=a[0], min=a[1], day=a[2], month=a[3], year=a[4])
+    def __init__(self, atype=AlarmTypes.daily,alarm_time='8:00'):
+        # define the alarm with strings
+        self.Type = atype
+        altime=None
+        try:
+            if atype == AlarmTypes.daily:
+                mytime = datetime.now()
+                altime = datetime.strptime(alarm_time, '%H:%M')
+                self.daysToWakeUp=range(7)
+            if atype == AlarmTypes.single:
+                altime = datetime.strptime(alarm_time, '%H:%M %d/%m/%Y')
+            self.alarmDateTime = self.timeToWakeUp = altime
+        except (IndexError, TypeError, ValueError):
+            raise ValueError('Bad date or time conversion')
+
+    def set_days(self, days=[]):
+        self.daysToWakeUp = days
+
+    def check_to_do(self):
+        mytime = datetime.now()
+        if self.state == AlarmStates.wait:
+            if self.alarmType == AlarmTypes.daily:
+                if mytime.time() >= self.timeToWakeUp.time() and mytime.weekday() in self.daysToWakeUp:
+                    if self.skipNext == 0:
+                        self.state= AlarmStates.alarm
+                    else:
+                        self.skipNext -= 1
+                        self.state = AlarmStates.stop
+            if AlarmTypes == AlarmTypes.single:
+                if mytime >= self.timeToWakeUp:
+                    self.state = AlarmStates.alarm
+
+        if self.state == AlarmStates.resumed and mytime >= self.timeToWakeUp:
+            self.state = AlarmStates.alarm
+
+        if self.state == AlarmStates.stop:
+            if AlarmTypes.single:
+                self.state = AlarmTypes.end
+            if AlarmTypes.daily:
+                self.timeToWakeUp = self.alarmDateTime.time()
+                self.state = AlarmStates.wait
+
+        return self.state
+
+    def resume_alarm(self):
+        self.resumed += 1
+        mytime = datetime.now()
+        rdelay = 0
+        if self.resumed > len(self.resumeDelay):
+            rdelay = timedelta( minutes=self.resumeDelay[-1])
+        else:
+            rdelay = timedelta(minutes=self.resumeDelay[self.resumed])
+        self.timeToWakeUp = mytime + rdelay
+        self.state = AlarmStates.resumed
+
+    def stop_alarm(self):
+        self.state = AlarmStates.stop
 
 
 class SelectableRecycleBoxLayout(FocusBehavior, LayoutSelectionBehavior,
@@ -64,9 +125,10 @@ class SelectableLabel(RecycleDataViewBehavior, BoxLayout):
             print("selection removed for {0}".format(rv.data[index]))
 
 
-class RVSScreen(Screen):
+class RVSAlarmScreen(Screen):
     def populate(self,database):
-        self.rv.data = database
+        if type(datetime)=='list':
+            self.rv.data = database
 
     def update(self, value,more, index):
         if self.rv.data:
@@ -84,4 +146,5 @@ class AlarmScreen(Screen):
     Month = StringProperty('08')
     Day = StringProperty('01')
     Days = ListProperty([True, False, True,False,False,False,False])
+    media = StringProperty('')
 

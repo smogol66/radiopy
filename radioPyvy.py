@@ -7,6 +7,7 @@ from kivy.uix.screenmanager import ScreenManager, Screen, SwapTransition
 from kivy.properties import ListProperty, NumericProperty, StringProperty, BooleanProperty
 from kivy.app import App
 from kivy.uix.widget import Widget
+from kivy.uix.popup import Popup
 from kivy.graphics import Color, SmoothLine
 from kivy.uix.floatlayout import FloatLayout
 from math import cos, sin, pi
@@ -124,7 +125,6 @@ class ClockScreen(Screen):
     def do_release(self):
         self.ids.label.text = ''
 
-
 class SelectableRecycleBoxLayout(FocusBehavior, LayoutSelectionBehavior,
                                  RecycleBoxLayout):
     ''' Adds selection and focus behaviour to the view. '''
@@ -182,6 +182,59 @@ class MediaSelectable(RecycleDataViewBehavior, BoxLayout):
     def select(self, index):
         self.selected = True
         self.parent.select_with_touch(self.index)
+
+class AlarmMediaSelectable(RecycleDataViewBehavior, BoxLayout):
+    song_title = StringProperty('')
+    artist = StringProperty('')
+    type = StringProperty('')
+    ''' Add selection support to the Label '''
+    index = None
+    selected = BooleanProperty(False)
+    selectable = BooleanProperty(True)
+
+    def refresh_view_attrs(self, rv, index, data):
+        ''' Catch and handle the view changes '''
+        self.index = index
+        return super(AlarmMediaSelectable, self).refresh_view_attrs(
+            rv, index, data)
+
+    def on_touch_down(self, touch):
+        ''' Add selection on touch down '''
+        if super(AlarmMediaSelectable, self).on_touch_down(touch):
+            return True
+        if self.collide_point(*touch.pos) and self.selectable:
+            return self.parent.select_with_touch(self.index, touch)
+
+    def apply_selection(self, rv, index, is_selected):
+        ''' Respond to the selection of items in the view. '''
+        self.selected = is_selected
+        title = media_list[index]
+        title.parse()
+        if title.is_parsed():
+            song_title = ''
+            song_artist = ''
+            try:
+                if not title.get_meta(0) is None:
+                    song_title = title.get_meta(0).decode('utf-8')
+
+                if not title.get_meta(1) is None:
+                    song_artist = title.get_meta(1).decode('utf-8')
+            except ValueError:
+                pass  # do not print nothing
+
+            self.song_title = song_title
+            self.artist = song_artist
+
+        if is_selected:
+           pass
+
+        else:
+            pass
+
+    def select(self, index):
+        self.selected = True
+        self.parent.select_with_touch(self.index)
+
 
 class RVSongScreen(Screen):
     def populate(self):
@@ -293,52 +346,95 @@ class PlayerScreen(Screen):
         if not list_player.is_playing():
             self.next_song()
 
+class BlankScreen(Screen):
+    pass
+
+class SongPopup(Popup):
+    def populate(self):
+        self.rv.data = song_list
 
 alarms_data = [{'value': 'Alarm \n{} as {}'.format(x,'daily'), 'more': 'daily'} for x in range(2)]
 
+
 class RadioPyApp(App):
-    data = ListProperty()
-    playScreen = None
+    songsData = ListProperty()
+    playScr = None
     menuScreen = None
-    clockScreen = None
+    clockScr = None
+    rvsSongsScr = None
+    rvsAlarmsScr = None
+    blankScr = None
     last_index = -1
     RVS = None
-    AlarmScr = None
+    alarmScr = None
+    AlarmSchedule = None
+    BlankSchedule = None
+    lastScreen = ''
 
     def build(self):
-
+        # update settings
         self.settings_cls = ExtendedSettings
         media_path = self.config.get('Base', 'mediapath')
         sub = self.config.get('Base', 'boolsub_folders') == u'1'
         load_media(media_path,sub)
-        sm = ScreenManager(transition=SwapTransition(direction='right'))
-        self.clockScreen = ClockScreen(name='clock')
-        sm.add_widget(self.clockScreen)
-        self.RVS = RVSongScreen(name='play_list')
-        self.RVS.populate()
-
-        sm.add_widget(self.RVS)
-
-        self.data = media_list
-        self.playScreen = PlayerScreen(name='play')
-        self.playScreen.index = 0
-        self.playScreen.playVolume = self.config.get('Base','startupvolume')
-        sm.add_widget(self.playScreen)
-        self.RVS = alarms.RVSScreen(name='alarm_list')
-        self.RVS.populate(alarms_data)
-        val = self.config.get('Base','brightness')
+        val = self.config.get('Base', 'brightness')
         if rpi:
             system('sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
         else:
             print('call to: sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
 
-        sm.add_widget(self.RVS)
-        self.AlarmScr = alarms.AlarmScreen(name='alarm')
-        sm.add_widget(self.AlarmScr)
+        # generate GUI
+        sm = ScreenManager(transition=SwapTransition(direction='right'))
 
-        Clock.schedule_interval(self.clockScreen.ticks.update_clock, 0.25)
-        # sm.current = 'clock'
+        self.clockScr = ClockScreen(name='clock')
+        sm.add_widget(self.clockScr)
+
+        self.rvsSongsScr = RVSongScreen(name='play_list')
+        self.rvsSongsScr.populate()
+        sm.add_widget(self.rvsSongsScr)
+
+        self.songsData = media_list
+        self.playScr = PlayerScreen(name='play')
+        self.playScr.index = 0
+        self.playScr.playVolume = self.config.get('Base', 'startupvolume')
+        sm.add_widget(self.playScr)
+
+        self.rvsAlarmsScr = alarms.RVSAlarmScreen(name='alarm_list')
+        self.rvsAlarmsScr.populate(alarms_data)
+        sm.add_widget(self.rvsAlarmsScr)
+
+        self.alarmScr = alarms.AlarmScreen(name='alarm')
+        sm.add_widget(self.alarmScr)
+
+        self.blankScr = BlankScreen(name='blank')
+        sm.add_widget(self.blankScr)
+
+        sm.current = 'clock'
+
+        # setup schedulers
+        Clock.schedule_interval(self.clockScr.ticks.update_clock, 0.25)
+        self.AlarmSchedule = Clock.schedule_interval(self.check_alarms, 1)
+
+        sm.bind(on_press=self.reset_blank)
+        self.reset_blank()
         return sm
+
+    def blank_screen(self,*args):
+        self.lastScreen = self.root.current
+        self.root.current = 'blank'
+        print 'blank rst'
+
+    def wake_up(self):
+        self.reset_blank()
+        self.root.current = self.lastScreen
+
+    def reset_blank(self):
+        if self.BlankSchedule:
+            self.BlankSchedule.cancel()
+        self.BlankSchedule = Clock.schedule_once(self.blank_screen, 20)
+
+    def check_alarms(self,*args):
+        print ('alarm check')
 
     def build_config(self, config):
         config.setdefaults('Base', {
@@ -364,7 +460,7 @@ class RadioPyApp(App):
             sub = self.config.get(section,'boolsub_folders')
             folder = self.config.get(section,'mediapath')
             load_media(folder, sub)
-            self.data = media_list
+            self.songsData = media_list
         if key=='reboot':
             self.config.set(section,key,'False')
             self.config.write()
@@ -403,7 +499,7 @@ class RadioPyApp(App):
         if index != self.last_index:
             self.last_index = index
 
-        self.playScreen.index = index
+        self.playScr.index = index
         self.root.current = 'play'
 
     def stop_and_return(self):
@@ -425,12 +521,12 @@ class RadioPyApp(App):
         self.root.current = 'alarm_list'
 
     def alarm_edit(self,index, more):
-        self.AlarmScr.index = index
-        self.AlarmScr.AlarmType = more
+        self.alarmScr.index = index
+        self.alarmScr.AlarmType = more
         if more=='daily':
-            self.AlarmScr.ids.daily.state='down'
+            self.alarmScr.ids.daily.state= 'down'
         else:
-            self.AlarmScr.ids.single.state = 'down'
+            self.alarmScr.ids.single.state = 'down'
         self.root.current='alarm'
         print('edit alarm at {} as {}'.format(index, more))
 
@@ -444,18 +540,29 @@ class RadioPyApp(App):
         print('had to add alarm')
 
     def set_alarm(self,index):
-        print('AlarmType: {} at index {}'.format(self.AlarmScr.AlarmType, index))
+        print('AlarmType: {} at index {}'.format(self.alarmScr.AlarmType, index))
 
-        self.RVS.update('Alarm \n{}:{} as {}'.format(self.AlarmScr.Hour,
-                                                     self.AlarmScr.Minute,
-                                                     self.AlarmScr.AlarmType),
-                        self.AlarmScr.AlarmType,index)
-        days = self.AlarmScr.Days
+        self.RVS.update('Alarm \n{}:{} as {}'.format(self.alarmScr.Hour,
+                                                     self.alarmScr.Minute,
+                                                     self.alarmScr.AlarmType),
+                        self.alarmScr.AlarmType, index)
+        days = self.alarmScr.Days
         print(days)
         self.root.current = 'alarm_list'
 
+    def choose_alarm_media(self,index):
+        popup = SongPopup()
+        popup.populate()
+        print('Alarm index: {}'.format(index))
+        popup.open()
+
+    def on_alarm_media_selection(self,index):
+
+        print('Alarm sond index: {}'.format(index))
+
     def cancel(self):
         self.root.current = 'alarm_list'
+        self.reset_blank()
 
 
 if rpi:
