@@ -422,6 +422,10 @@ class RadioPyApp(App):
     def blank_screen(self,*args):
         self.lastScreen = self.root.current
         self.root.current = 'blank'
+        if rpi:
+            system('sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(0))
+        else:
+            print('call to: sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(0))
         print 'blank rst'
 
     def wake_up(self):
