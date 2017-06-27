@@ -13,7 +13,7 @@
         Label:
             id: one
             halign: 'left'
-            text: root.value
+            text: root.value + '\n' + root.type
         CheckBox:
             active: root.active
             size_hint_x: 0.06
@@ -22,7 +22,7 @@
         ButtonImage:
             size_hint_x: 0.05
             source: 'img/edit.png'
-            on_press: app.alarm_edit(root.index,root.more)
+            on_press: app.alarm_edit(root.index,root.type)
 
 <RVSAlarmScreen>
     on_touch_down:
@@ -99,9 +99,9 @@
                     text: 'daily'
                     size_hint_x:0.25
                     font_size: self.height * 0.7
-                    on_touch_down:
+                    on_press:
                         root.AlarmType = 'daily'
-                        self.state= 'normal'
+                        self.state= 'down'
                         print(root.AlarmType)
                     group: 'type'
                 ToggleButton:
@@ -109,9 +109,9 @@
                     text: 'single'
                     size_hint_x:0.25
                     font_size: self.height * 0.7
-                    on_touch_down:
+                    on_press:
                         root.AlarmType = 'single'
-                        self.state= 'normal'
+                        self.state= 'down'
                         print(root.AlarmType)
                     group: 'type'
             BoxLayout:
@@ -134,7 +134,7 @@
                 Spinner:
                     size_hint_x: .18
                     font_size: self.height * 0.7
-                    values: ['{:02d}'.format(x) for x in range(0,60,5)]
+                    values: ['{:02d}'.format(x) for x in range(0,60,1)]
                     text: root.Minute
                     id: 'minute'
                     on_text:
@@ -192,17 +192,21 @@
                 size_hint_x: .18
                 font_size: self.height * 0.7
                 values: ['{:02d}'.format(x) for x in range(1,31)]
-                text: self.values[0]
+                text: root.Day
                 id: 'day'
+                on_text:
+                    root.Day=self.text
             Label:
                 size_hint_x: .1
                 text: '.'
             Spinner:
                 size_hint_x: .18
                 font_size: self.height * 0.7
-                values: ['{:02d}'.format(x) for x in range(1,12)]
-                text: self.values[0]
+                values: ['{:02d}'.format(x) for x in range(1,13)]
+                text: root.Month
                 id: 'month'
+                on_text:
+                    root.Month=self.text
         BoxLayout:
             size_hint_y: 0.1
             pos: (0,140)
@@ -210,7 +214,9 @@
                 text: 'Media'
                 font_size: self.height * 0.7
                 text_size: self.size
+                size_hint_x: .2
             Label:
+                font_size: self.height * 0.4
                 text: root.media
             Button:
                 text: '...'
@@ -236,5 +242,31 @@
                 Button:
                     text: 'cancel'
                     on_press:
-                        app.cancel()
+                        app.back_alarm()
+                Button:
+                    text: 'delete'
+                    on_press:
+                        app.delete_alarm(root.index)
+
+
+<AlarmRunScreen>
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            text: root.alarmText
+            size_hint_y: 0.1
+        Label:
+            size_hint_y: 0.1
+            text: root.mediaText
+        BoxLayout:
+            Button:
+                text: 'Stop'
+                background_color: (1.0, 0.0, 0.0, 1.0)
+                on_press:
+                    app.alarm_stop(root.index)
+            Button:
+                text: 'Resume'
+                on_press:
+                    app.alarm_resume(root.index)
+
 

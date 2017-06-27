@@ -1,3 +1,4 @@
+from __future__ import print_function
 from kivy.uix.recycleview.views import RecycleDataViewBehavior
 from kivy.uix.recycleboxlayout import RecycleBoxLayout
 from kivy.uix.behaviors import FocusBehavior
@@ -20,14 +21,33 @@ from kivy.config import Config
 from extendedsettings import ExtendedSettings
 from settingsjson import settings_json
 import alarms
+import pickle
 
 
+ALARMS_FILE = 'alarms.dat'
 
 try:
     import RPi.GPIO
     rpi = True
 except ImportError:
     rpi = False
+
+
+def save_alarm_db():
+    with open(ALARMS_FILE, 'wb') as f:
+        pickle.dump(alarms_data, f)
+
+
+# global databases
+
+try:
+    with open(ALARMS_FILE) as f:
+        alarms_data = pickle.load(f)
+except:
+    print('Error trying to load file')
+    alarms_data = [alarms.Alarm(), alarms.Alarm(atype=alarms.AlarmTypes.daily, alarm_time='10:00')]
+    save_alarm_db()
+
 
 media_list = None
 song_list = []
@@ -133,7 +153,7 @@ class SelectableRecycleBoxLayout(FocusBehavior, LayoutSelectionBehavior,
 
 
 class MediaSelectable(RecycleDataViewBehavior, BoxLayout):
-    song_title = StringProperty('')
+    songTitle = StringProperty('')
     artist = StringProperty('')
     type = StringProperty('')
     ''' Add selection support to the Label '''
@@ -171,7 +191,7 @@ class MediaSelectable(RecycleDataViewBehavior, BoxLayout):
             except ValueError:
                 pass  # do not print nothing
 
-            self.song_title = song_title
+            self.songTitle = song_title
             self.artist = song_artist
 
         if is_selected:
@@ -184,10 +204,12 @@ class MediaSelectable(RecycleDataViewBehavior, BoxLayout):
         self.selected = True
         self.parent.select_with_touch(self.index)
 
+
 class AlarmMediaSelectable(RecycleDataViewBehavior, BoxLayout):
-    song_title = StringProperty('')
+    songTitle = StringProperty('')
     artist = StringProperty('')
     type = StringProperty('')
+    alarmIndex = NumericProperty(-1)
     ''' Add selection support to the Label '''
     index = None
     selected = BooleanProperty(False)
@@ -223,7 +245,7 @@ class AlarmMediaSelectable(RecycleDataViewBehavior, BoxLayout):
             except ValueError:
                 pass  # do not print nothing
 
-            self.song_title = song_title
+            self.songTitle = song_title
             self.artist = song_artist
 
         if is_selected:
@@ -351,10 +373,9 @@ class BlankScreen(Screen):
     pass
 
 class SongPopup(Popup):
+    alarmIndex = NumericProperty(-1)
     def populate(self):
         self.rv.data = song_list
-
-alarms_data = [alarms.Alarm(),alarms.Alarm(atype=alarms.AlarmTypes.daily,alarm_time='10:00')]
 
 class RadioPyApp(App):
     songsData = ListProperty()
@@ -368,8 +389,10 @@ class RadioPyApp(App):
     RVS = None
     alarmScr = None
     AlarmSchedule = None
+    alarmRunScr = None
     BlankSchedule = None
     lastScreen = ''
+    alarmRun = False
 
     def build(self):
         # update settings
@@ -406,6 +429,9 @@ class RadioPyApp(App):
         self.alarmScr = alarms.AlarmScreen(name='alarm')
         sm.add_widget(self.alarmScr)
 
+        self.alarmRunScr = alarms.AlarmRunScreen(name='alarmRun')
+        sm.add_widget(self.alarmRunScr)
+
         self.blankScr = BlankScreen(name='blank')
         sm.add_widget(self.blankScr)
 
@@ -426,7 +452,7 @@ class RadioPyApp(App):
             system('sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(0))
         else:
             print('call to: sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(0))
-        print 'blank rst'
+        print('blank rst')
 
     def wake_up(self):
         self.reset_blank()
@@ -444,7 +470,25 @@ class RadioPyApp(App):
 
     def check_alarms(self,*args):
         for index, alarm in enumerate(alarms_data):
-            print('alarm {} : {}'.format(index, alarm.check_to_do()))
+            ret = alarm.check_to_do()
+            # print('alarm {} {}, '.format(index,ret),end='')
+            if ret == alarms.AlarmStates.alarm and not self.alarmRun:
+                # stop everything and play the alarm song
+                self.BlankSchedule.cancel()
+                list_player.stop()
+                list_player.play_item_at_index(alarm.media)
+                player.audio_set_volume(int(alarm.alarm_actual_volume))
+                self.alarmRunScr.index=index
+                self.alarmRunScr.alarmText='Alarm {}'.format(index)
+                self.alarmRunScr.mediaText=song_list[alarm.media]['media_file']
+                self.root.current='alarmRun'
+                self.alarmRun = True
+            if ret == alarms.AlarmStates.alarm and self.alarmRun:
+                if alarm.alarm_actual_volume < 100:
+                    alarm.alarm_actual_volume += alarm.alarm_vol_inc
+                    player.audio_set_volume(int(alarm.alarm_actual_volume))
+            elif ret == alarms.AlarmStates.resumed:
+                self.alarmRun = False
 
 
     def build_config(self, config):
@@ -533,13 +577,28 @@ class RadioPyApp(App):
 
     def alarm_edit(self,index, more):
         self.alarmScr.index = index
-        self.alarmScr.AlarmType = more
-        if more=='daily':
+        myalarm = alarms_data[index]
+        self.alarmScr.Hour = str(myalarm.alarmDateTime.hour).zfill(2)
+        self.alarmScr.Minute = str(myalarm.alarmDateTime.minute).zfill(2)
+        self.alarmScr.ids.single.state = 'normal'
+        self.alarmScr.ids.daily.state = 'normal'
+        self.alarmScr.media = song_list[myalarm.media]['media_file']
+        if myalarm.alarmType==alarms.AlarmTypes.daily:
             self.alarmScr.ids.daily.state= 'down'
-        else:
+            self.alarmScr.AlarmType='daily'
+            for i in range(7):
+                self.alarmScr.Days[i] = False
+                if i in myalarm.daysToWakeUp:
+                    self.alarmScr.Days[i] = True
+        elif myalarm.alarmType==alarms.AlarmTypes.single:
             self.alarmScr.ids.single.state = 'down'
+
+            self.alarmScr.AlarmType = 'single'
+            self.alarmScr.Day = str(myalarm.alarmDateTime.day).zfill(2)
+            self.alarmScr.Month = str(myalarm.alarmDateTime.month).zfill(2)
+
         self.root.current='alarm'
-        print('edit alarm at {} as {}'.format(index, more))
+        save_alarm_db()
 
     def alarm_active(self,index, value):
         if value:
@@ -548,7 +607,9 @@ class RadioPyApp(App):
             print('alarm {} disabled'.format(index))
 
     def add_alarm(self):
-        print('had to add alarm')
+        alarms_data.append(alarms.Alarm())
+        self.rvsAlarmsScr.populate(alarms_data)
+        self.alarm_edit(len(alarms_data)-1,'single')
 
     def set_alarm(self,index):
         print('AlarmType: {} at index {}'.format(self.alarmScr.AlarmType, index))
@@ -557,30 +618,57 @@ class RadioPyApp(App):
             alarms_data[index].update_daily_alarm(self.alarmScr.Hour,
                                             self.alarmScr.Minute,
                                             self.alarmScr.Days)
+
         elif self.alarmScr.AlarmType == 'single':
             alarms_data[index].update_single_alarm(self.alarmScr.Hour,
                                             self.alarmScr.Minute,
                                             self.alarmScr.Day,
                                             self.alarmScr.Month)
 
+        self.rvsAlarmsScr.update(alarms_data[index], index)
 
         days = self.alarmScr.Days
         print(days)
         self.root.current = 'alarm_list'
+        save_alarm_db()
 
     def choose_alarm_media(self,index):
-        popup = SongPopup()
-        popup.populate()
+        self.popup = SongPopup()
+        self.popup.populate()
+        self.popup.alarmIndex = index
         print('Alarm index: {}'.format(index))
-        popup.open()
+        self.popup.open()
 
-    def on_alarm_media_selection(self,index):
+    def on_alarm_media_selection(self, media_index ):
+        alarm_index = self.popup.alarmIndex
+        print('Alarm song index: {}'.format(alarm_index))
+        alarms_data[alarm_index].media = media_index
+        self.alarmScr.media=song_list[media_index]['media_file']
+        self.popup.dismiss()
 
-        print('Alarm sond index: {}'.format(index))
-
-    def cancel(self):
+    def back_alarm(self):
         self.root.current = 'alarm_list'
         self.reset_blank()
+
+    def delete_alarm(self,index):
+        del alarms_data[index]
+        self.rvsAlarmsScr.populate(alarms_data)
+        self.root.current = 'alarm_list'
+        self.reset_blank()
+        save_alarm_db()
+
+    def alarm_stop(self,index):
+        alarms_data[index].stop_alarm()
+        list_player.stop()
+        self.blank_screen()
+        self.root.current='clock'
+        self.alarmRun = False
+
+    def alarm_resume(self,index):
+        alarms_data[index].resume_alarm()
+        list_player.stop()
+        self.reset_blank()
+        self.root.current='clock'
 
 
 if rpi:
