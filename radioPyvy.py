@@ -498,15 +498,13 @@ class RadioPyApp(App):
             elif ret == alarms.AlarmStates.alarm and self.alarmRun:
                 # stop everything and play the alarm song
                 self.BlankSchedule.cancel()
-
                 vol = self.config.get('Base','startupvolume')
                 if alarm.alarm_actual_volume < vol:
                     alarm.alarm_actual_volume += alarm.alarm_vol_inc
                     player.audio_set_volume(int(alarm.alarm_actual_volume))
             elif ret == alarms.AlarmStates.resumed:
                 self.alarmRun = False
-                self.reset_blank()
-                self.blank_screen()
+
 
     def build_config(self, config):
         config.setdefaults('Base', {
@@ -685,6 +683,7 @@ class RadioPyApp(App):
         alarms_data[index].resume_alarm()
         list_player.stop()
         self.reset_blank()
+        self.blank_screen()
         self.root.current='clock'
 
 
