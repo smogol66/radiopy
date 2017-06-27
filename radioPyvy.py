@@ -140,6 +140,7 @@ class Ticks(Widget):
 
 
 class ClockScreen(Screen):
+    alarm_left = StringProperty('')
     def do_press(self):
         self.ids.label.text = 'pressed'
 
@@ -475,6 +476,11 @@ class RadioPyApp(App):
             if ret == alarms.AlarmStates.alarm and not self.alarmRun:
                 # stop everything and play the alarm song
                 self.BlankSchedule.cancel()
+                val = self.config.get('Base', 'brightness')
+                if rpi:
+                    system('sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
+                else:
+                    print('call to: sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
                 list_player.stop()
                 list_player.play_item_at_index(alarm.media)
                 player.audio_set_volume(int(alarm.alarm_actual_volume))
@@ -482,6 +488,7 @@ class RadioPyApp(App):
                 self.alarmRunScr.alarmText='Alarm {}'.format(index)
                 self.alarmRunScr.mediaText=song_list[alarm.media]['media_file']
                 self.root.current='alarmRun'
+
                 self.alarmRun = True
             if ret == alarms.AlarmStates.alarm and self.alarmRun:
                 if alarm.alarm_actual_volume < 60:
@@ -490,7 +497,6 @@ class RadioPyApp(App):
             elif ret == alarms.AlarmStates.resumed:
                 self.alarmRun = False
                 self.reset_blank()
-
 
     def build_config(self, config):
         config.setdefaults('Base', {

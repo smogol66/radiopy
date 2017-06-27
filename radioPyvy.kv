@@ -285,6 +285,12 @@
             source: 'img/clock_1.png'
             on_press: app.show_alarms()
 
+    AnchorLayout:
+        anchor_x: 'left'
+        anchor_y: 'top'
+        Label:
+            text: root.alarm_left
+
     FloatLayout:
         id: face
         size_hint: None, None
