@@ -42,7 +42,7 @@ class Alarm:
         self.resumeDelay = [10, 10, 10]
         self.resumeDelay= [20*60,10*30,5*60]  # todo: add this to the alarm screen as an option
         self.alarm_actual_volume = 10
-        self.alarm_vol_inc = 3.258 # todo: add this as an option : volume delay (time to full volume)
+        self.alarm_vol_inc = 120.0/4.0 # todo: add this as an option : volume delay (time to full volume)
         self.media = 0
         self.Type = AlarmTypes.daily
         self.set_alarm(atype, alarm_time)

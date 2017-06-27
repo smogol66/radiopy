@@ -491,7 +491,15 @@ class RadioPyApp(App):
 
                 self.alarmRun = True
             if ret == alarms.AlarmStates.alarm and self.alarmRun:
-                if alarm.alarm_actual_volume < 60:
+                # stop everything and play the alarm song
+                self.BlankSchedule.cancel()
+                val = self.config.get('Base', 'brightness')
+                if rpi:
+                    system('sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
+                else:
+                    print('call to: sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
+                vol = self.config.get('Base','startupvolume')
+                if alarm.alarm_actual_volume < vol:
                     alarm.alarm_actual_volume += alarm.alarm_vol_inc
                     player.audio_set_volume(int(alarm.alarm_actual_volume))
             elif ret == alarms.AlarmStates.resumed:
