@@ -453,6 +453,7 @@ class RadioPyApp(App):
             system('sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(7))
         else:
             print('call to: sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(7))
+
         print('blank rst')
 
     def wake_up(self):
@@ -469,6 +470,14 @@ class RadioPyApp(App):
             self.BlankSchedule.cancel()
         self.BlankSchedule = Clock.schedule_once(self.blank_screen, 20)
 
+    def stop_blank(self):
+        self.BlankSchedule.cancel()
+        val = self.config.get('Base', 'brightness')
+        if rpi:
+            system('sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
+        else:
+            print('call to: sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
+
     def check_alarms(self,*args):
         for index, alarm in enumerate(alarms_data):
             ret = alarm.check_to_do()
@@ -476,11 +485,7 @@ class RadioPyApp(App):
             if ret == alarms.AlarmStates.alarm and not self.alarmRun:
                 # stop everything and play the alarm song
                 self.BlankSchedule.cancel()
-                val = self.config.get('Base', 'brightness')
-                if rpi:
-                    system('sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
-                else:
-                    print('call to: sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
+                self.stop_blank()
                 list_player.stop()
                 list_player.play_item_at_index(alarm.media)
                 player.audio_set_volume(int(alarm.alarm_actual_volume))
@@ -488,16 +493,12 @@ class RadioPyApp(App):
                 self.alarmRunScr.alarmText='Alarm {}'.format(index)
                 self.alarmRunScr.mediaText=song_list[alarm.media]['media_file']
                 self.root.current='alarmRun'
-
+                self.stop_blank()
                 self.alarmRun = True
-            if ret == alarms.AlarmStates.alarm and self.alarmRun:
+            elif ret == alarms.AlarmStates.alarm and self.alarmRun:
                 # stop everything and play the alarm song
                 self.BlankSchedule.cancel()
-                val = self.config.get('Base', 'brightness')
-                if rpi:
-                    system('sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
-                else:
-                    print('call to: sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
+
                 vol = self.config.get('Base','startupvolume')
                 if alarm.alarm_actual_volume < vol:
                     alarm.alarm_actual_volume += alarm.alarm_vol_inc
@@ -505,6 +506,7 @@ class RadioPyApp(App):
             elif ret == alarms.AlarmStates.resumed:
                 self.alarmRun = False
                 self.reset_blank()
+                self.blank_screen()
 
     def build_config(self, config):
         config.setdefaults('Base', {
@@ -675,9 +677,9 @@ class RadioPyApp(App):
     def alarm_stop(self,index):
         alarms_data[index].stop_alarm()
         list_player.stop()
-        self.blank_screen()
         self.root.current='clock'
         self.alarmRun = False
+        self.reset_blank()
 
     def alarm_resume(self,index):
         alarms_data[index].resume_alarm()
