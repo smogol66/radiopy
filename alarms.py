@@ -13,25 +13,41 @@ from datetime import datetime, timedelta, time
 from enum import Enum
 from copy import copy
 
-AlarmStates = Enum('AlarmsStates','wait alarm resumed stop end')
-AlarmTypes  = Enum('AlarmTypes', 'single daily')
+
+class AlarmStates(Enum):
+    wait=1
+    alarm=2
+    resumed=3
+    stop=4
+    end=5
+
+
+class AlarmTypes(Enum):
+    single=0
+    daily=1
 
 
 class Alarm:
     """Alarm class to handle all the thing to do with clock alarms"""
-    skipNext = 0
-    type = None
-    state = AlarmStates.wait
-    alarmType = AlarmTypes.daily
-    alarmDateTime = datetime.now()
-    timeToWakeUp = datetime.now()
-    daysToWakeUp = []
-    resumed = -1
-    # resumeDelay= [20,10,5]
-    resumeDelay = [1, 1, 1]
-    media = None
 
-    def __init__(self, atype=AlarmTypes.daily,alarm_time='8:00'):
+    def __init__(self,atype=AlarmTypes.daily, alarm_time='08:00'):
+        self.skipNext = 0
+        self.type = None
+        self.state = AlarmStates.wait
+        self.alarmType = AlarmTypes.daily
+        self.alarmDateTime = datetime.now()
+        self.timeToWakeUp = datetime.now()
+        self.daysToWakeUp = []
+        self.resumed = -1
+        self.resumeDelay = [10, 10, 10]
+        # resumeDelay= [20*60,10*30,5*60]  # todo: add this to the alarm screen as an option
+        self.alarm_actual_volume = 10
+        self.alarm_vol_inc = 3.258 # todo: add this as an option : volume delay (time to full volume)
+        self.media = 0
+        self.Type = AlarmTypes.daily
+        self.set_alarm(atype, alarm_time)
+
+    def set_alarm(self, atype=AlarmTypes.daily,alarm_time='8:00'):
         # define the alarm with strings
         self.Type = atype
         altime=None
@@ -57,6 +73,7 @@ class Alarm:
     def check_to_do(self):
         mytime = datetime.now()
         if self.state == AlarmStates.wait:
+            # print('time to go: {}'.format(self.timeToWakeUp-mytime))
             if self.alarmType == AlarmTypes.daily:
                 if mytime >= self.timeToWakeUp and mytime.weekday() in self.daysToWakeUp:
                     if self.skipNext == 0:
@@ -64,19 +81,26 @@ class Alarm:
                     else:
                         self.skipNext -= 1
                         self.state = AlarmStates.stop
-            if AlarmTypes == AlarmTypes.single:
+            if self.alarmType == AlarmTypes.single:
                 if mytime >= self.timeToWakeUp:
                     self.state = AlarmStates.alarm
 
-        if self.state == AlarmStates.resumed and mytime >= self.timeToWakeUp:
-            self.state = AlarmStates.alarm
+        if self.state == AlarmStates.resumed:
+            # print('resume time to go: {}'.format(self.timeToWakeUp - mytime))
+            if mytime >= self.timeToWakeUp:
+                self.state = AlarmStates.alarm
 
         if self.state == AlarmStates.stop:
-            if AlarmTypes.single:
-                self.state = AlarmTypes.end
-            if AlarmTypes.daily:
-                self.timeToWakeUp = self.alarmDateTime.time()
+            if self.alarmType == AlarmTypes.single:
+                self.state = AlarmStates.end
+            if self.alarmType == AlarmTypes.daily:
+                self.timeToWakeUp = self.alarmDateTime + timedelta(days=1)
                 self.state = AlarmStates.wait
+
+        if self.state == AlarmStates.alarm:
+            time_run = mytime - self.timeToWakeUp
+            if time_run >= timedelta(minutes=10):
+                self.state = AlarmStates.stop
 
         return self.state
 
@@ -84,38 +108,42 @@ class Alarm:
         self.resumed += 1
         mytime = datetime.now()
         rdelay = 0
-        if self.resumed > len(self.resumeDelay):
-            rdelay = timedelta( minutes=self.resumeDelay[-1])
+        if self.resumed >= len(self.resumeDelay):
+            rdelay = self.resumeDelay[len(self.resumeDelay)-1]
+            self.resumed=len(self.resumeDelay)-1
         else:
-            rdelay = timedelta(minutes=self.resumeDelay[self.resumed])
-        self.timeToWakeUp = mytime + rdelay
+            rdelay = self.resumeDelay[self.resumed]
+        self.timeToWakeUp = mytime + timedelta( seconds= rdelay)
         self.state = AlarmStates.resumed
 
     def stop_alarm(self):
+        self.alarm_actual_volume = 10
         self.state = AlarmStates.stop
 
     def update_daily_alarm(self, hour, minute, days):
         mytime = datetime.now()
-        altime = datetime.combine(mytime.date(), time(hour=int(hour), minute=int(minute)))
-        if mytime >= altime:
+        self.alarmDateTime=self.alarmDateTime.combine(mytime.date(), time(hour=int(hour), minute=int(minute)))
+        if mytime >= self.alarmDateTime:
             # if alarm in the past, set it in the future
-            altime = altime + timedelta(days=1)
+            self.alarmDateTime += timedelta(days=1)
         daysenum = []
         for daynum,day in enumerate(days):
             if day==True:
                 daysenum.append(daynum)
+        del self.daysToWakeUp[:]
         self.daysToWakeUp = copy(daysenum)
-        self.timeToWakeUp = altime
+        self.timeToWakeUp = self.alarmDateTime
+        self.alarmType = AlarmTypes.daily
 
     def update_single_alarm(self, hour, minute, day, month):
         mytime = datetime.now()
-        altime = datetime.combine(mytime.date, datetime(month=int(month), day=int(day), hour=int(hour),
-                                                        minute=int(minute)))
-        if altime >= mytime:
-            altime = altime + timedelta(year=1)
-        self.timeToWakeUp = altime
-
-
+        self.alarmDateTime = datetime(month=int(month), day=int(day), year=mytime.year,
+                                      hour=int(hour), minute=int(minute))
+        if self.alarmDateTime <= mytime:
+            self.alarmDateTime = datetime(month=int(month), day=int(day), year=mytime.year + 1,
+                                      hour=int(hour), minute=int(minute))
+        self.timeToWakeUp = self.alarmDateTime
+        self.alarmType = AlarmTypes.single
 
 
 class SelectableRecycleBoxLayout(FocusBehavior, LayoutSelectionBehavior,
@@ -126,7 +154,7 @@ class SelectableRecycleBoxLayout(FocusBehavior, LayoutSelectionBehavior,
 
 class SelectableLabel(RecycleDataViewBehavior, BoxLayout):
     value = StringProperty('')
-    more = StringProperty('')
+    type = StringProperty('')
     ''' Add selection support to the Label '''
     index = None
     selected = BooleanProperty(False)
@@ -155,7 +183,6 @@ class SelectableLabel(RecycleDataViewBehavior, BoxLayout):
 
 data_list = []
 
-
 class RVSAlarmScreen(Screen):
 
     def populate(self,database):
@@ -167,15 +194,20 @@ class RVSAlarmScreen(Screen):
                 for alarm in database:
                     print (alarm.alarmType, alarm.alarmDateTime)
                     data_list.append({'value':datetime.strftime(alarm.alarmDateTime,'%H:%M'),\
-                                      'more':'daily' if alarm.alarmType==AlarmTypes.daily else 'once'})
+                                      'type':'daily' if alarm.alarmType==AlarmTypes.daily else 'once'})
                 self.rv.data=data_list
 
-
-    def update(self, value,more, index):
+    def update(self, alarm, index):
         if self.rv.data:
-            self.rv.data[index]['value'] = value or 'default new value'
-            self.rv.data[index]['more'] = more or 'daily'
+            self.rv.data[index]['value'] = alarm.alarmDateTime.strftime('%H:%M') or 'default new value'
+            self.rv.data[index]['type'] = 'daily' if alarm.alarmType==AlarmTypes.daily else 'single'
             self.rv.refresh_from_data()
+
+    def remove(self,index):
+        del self.rv.data[index]
+        self.rv.refresh_from_data()
+
+
 
 
 class AlarmScreen(Screen):
@@ -184,8 +216,15 @@ class AlarmScreen(Screen):
     index = NumericProperty(0)
     Minute = StringProperty('00')
     Hour = StringProperty('08')
-    Month = StringProperty('08')
+    Month = StringProperty('01')
     Day = StringProperty('01')
     Days = ListProperty([True, False, True,False,False,False,False])
     media = StringProperty('')
+
+
+class AlarmRunScreen(Screen):
+    index = NumericProperty(-1)
+    alarmText = StringProperty('Alarm')
+    mediaText = StringProperty('')
+
 
