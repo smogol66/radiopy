@@ -484,11 +484,12 @@ class RadioPyApp(App):
                 self.root.current='alarmRun'
                 self.alarmRun = True
             if ret == alarms.AlarmStates.alarm and self.alarmRun:
-                if alarm.alarm_actual_volume < 100:
+                if alarm.alarm_actual_volume < 60:
                     alarm.alarm_actual_volume += alarm.alarm_vol_inc
                     player.audio_set_volume(int(alarm.alarm_actual_volume))
             elif ret == alarms.AlarmStates.resumed:
                 self.alarmRun = False
+                self.reset_blank()
 
 
     def build_config(self, config):
