@@ -56,6 +56,29 @@
             source: 'img/home.png'
             on_press: app.show_clock()
 
+<DisableAlarmPopup@Popup>
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            text: 'Disable next alarms'
+        Spinner:
+            size_hint_x: .8
+            font_size: self.height * 0.7
+            values: ['all','1','2','3','4','5','6','7']
+            text: root.next_alarms
+            id: 'next_alarms'
+            on_text:
+                root.next_alarms = self.text
+        BoxLayout:
+            orientation: 'horizontal'
+            Button:
+                text: 'Ok'
+                on_press:
+                    app.alarm_skipped(root.index, root.next_alarms)
+            Button:
+                text: 'cancel'
+                on_press: root.dismiss()
+
 
 <AlarmScreen>:
     on_touch_down:

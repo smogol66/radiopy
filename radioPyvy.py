@@ -91,10 +91,11 @@ def load_media(folder, scan_folders=False):
         media_list = Instance.media_list_new()
         del song_list[:]
 
-    add_radio('http://stream.srg-ssr.ch/m/rsj/mp3_128')
-    add_radio('http://streaming.radio.funradio.fr/fun-1-48-192')
-    add_radio('http://streaming.radio.rtl2.fr/rtl2-1-44-128')
-    add_radio('http://stream.srg-ssr.ch/m/couleur3/mp3_128')
+    with open('radios.txt') as r:
+        for line in r:
+            url = line.split('#')[0].strip()
+            add_radio(url)
+
 
     recursive_walk(folder, scan_folders)
 
@@ -378,6 +379,7 @@ class SongPopup(Popup):
     def populate(self):
         self.rv.data = song_list
 
+
 class RadioPyApp(App):
     songsData = ListProperty()
     playScr = None
@@ -498,7 +500,8 @@ class RadioPyApp(App):
             elif ret == alarms.AlarmStates.alarm and self.alarmRun:
                 # stop everything and play the alarm song
                 self.BlankSchedule.cancel()
-                vol = self.config.get('Base','startupvolume')
+                vol = int(self.config.get('Base','startupvolume'))
+                vol = vol * 1.2 if vol*1.2<100 else 100
                 if alarm.alarm_actual_volume < vol:
                     alarm.alarm_actual_volume += alarm.alarm_vol_inc
                     player.audio_set_volume(int(alarm.alarm_actual_volume))
@@ -618,8 +621,19 @@ class RadioPyApp(App):
     def alarm_active(self,index, value):
         if value:
             print('alarm {} activated'.format(index))
+            alarms_data[index].skipNext=0
+            save_alarm_db()
         else:
+            self.popup = alarms.DisableAlarmPopup()
+            self.popup.index = index
+            self.popup.open()
             print('alarm {} disabled'.format(index))
+
+    def alarm_skipped(self,index,skip_next):
+        alarms_data[index].skipNext = int(skip_next) if skip_next != 'all' else -1
+        self.popup.dismiss()
+        save_alarm_db()
+
 
     def add_alarm(self):
         alarms_data.append(alarms.Alarm())

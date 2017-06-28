@@ -2,7 +2,8 @@ from kivy.app import App
 from kivy.lang import Builder
 from kivy.uix.recycleview import RecycleView
 from kivy.uix.recycleview.views import RecycleDataViewBehavior
-from kivy.properties import BooleanProperty
+from kivy.uix.popup import Popup
+from kivy.properties import BooleanProperty, NumericProperty, StringProperty
 from kivy.uix.recycleboxlayout import RecycleBoxLayout
 from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.recycleview.layout import LayoutSelectionBehavior
@@ -29,6 +30,8 @@ class AlarmTypes(Enum):
 
 class Alarm:
     """Alarm class to handle all the thing to do with clock alarms"""
+    resumeDelay = [20 * 60, 10 * 30, 5 * 60]  # todo: add this to the alarm screen as an option
+    alarm_vol_inc =  100.0 / 2.0 / 60  # todo: add this as an option : volume delay (time to full volume)
 
     def __init__(self,atype=AlarmTypes.daily, alarm_time='08:00'):
         self.skipNext = 0
@@ -39,10 +42,7 @@ class Alarm:
         self.timeToWakeUp = datetime.now()
         self.daysToWakeUp = []
         self.resumed = -1
-        #  self.resumeDelay = [10, 10, 10]
-        self.resumeDelay= [20*60,10*30,5*60]  # todo: add this to the alarm screen as an option
         self.alarm_actual_volume = 10
-        self.alarm_vol_inc = 120.0/4.0 # todo: add this as an option : volume delay (time to full volume)
         self.media = 0
         self.Type = AlarmTypes.daily
         self.set_alarm(atype, alarm_time)
@@ -72,6 +72,10 @@ class Alarm:
 
     def check_to_do(self):
         mytime = datetime.now()
+        if self.skipNext == -1:
+            # alarm is disabled
+            self.state = AlarmStates.wait
+
         if self.state == AlarmStates.wait:
             # print('time to go: {}'.format(self.timeToWakeUp-mytime))
             if self.alarmType == AlarmTypes.daily:
@@ -119,6 +123,7 @@ class Alarm:
     def stop_alarm(self):
         self.alarm_actual_volume = 10
         self.state = AlarmStates.stop
+        self.resumed=-1
 
     def update_daily_alarm(self, hour, minute, days):
         mytime = datetime.now()
@@ -208,8 +213,6 @@ class RVSAlarmScreen(Screen):
         self.rv.refresh_from_data()
 
 
-
-
 class AlarmScreen(Screen):
     AlarmText = StringProperty('Alarm')
     AlarmType = StringProperty('')
@@ -228,3 +231,6 @@ class AlarmRunScreen(Screen):
     mediaText = StringProperty('')
 
 
+class DisableAlarmPopup(Popup):
+    next_alarms = StringProperty('all')
+    index = NumericProperty(-1)
