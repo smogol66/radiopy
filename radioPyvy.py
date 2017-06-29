@@ -464,11 +464,12 @@ class RadioPyApp(App):
         self.root.current = self.lastScreen = screen
 
     def blank_screen(self,*args):
+        val = self.config.get('Base','blank_brightness')
         if rpi:
-            system('sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(7))
+            system('sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
         else:
             self.lastScreen = self.root.current
-            print('call to: sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(7))
+            print('call to: sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
             self.root.current = 'blank'
 
     def wake_up(self):
@@ -484,7 +485,6 @@ class RadioPyApp(App):
         self.stop_blank()
         self.BlankSchedule = Clock.schedule_once(self.blank_screen, 20)
         self.wake_up()
-
 
     def stop_blank(self):
         if self.BlankSchedule:
@@ -521,8 +521,9 @@ class RadioPyApp(App):
                     alarm.alarm_actual_volume += alarm.alarm_vol_inc
                     player.audio_set_volume(int(alarm.alarm_actual_volume))
             elif ret == alarms.AlarmStates.resumed:
+                if self.alarmRun:
+                    print('next resume time: {}'.format(alarm.timeToWakeUp))
                 self.alarmRun = False
-
 
     def build_config(self, config):
         config.setdefaults('Base', {
@@ -530,10 +531,12 @@ class RadioPyApp(App):
             'baselamp': 'off',
             'mediapath': base_path,
             'brightness': 255,
+            'blank_brightness': 7,
             'runcolor': '#ffffffff',
             'boolsub_folders': 'False',
             'shutdown':'False',
             'reboot':'False',
+
         })
 
     def build_settings(self, settings):
