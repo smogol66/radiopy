@@ -98,7 +98,7 @@ class Alarm:
             if self.alarmType == AlarmTypes.single:
                 self.state = AlarmStates.end
             if self.alarmType == AlarmTypes.daily:
-                self.timeToWakeUp = self.alarmDateTime + timedelta(days=1)
+                self.timeToWakeUp = datetime.combine(mytime.date(), self.alarmDateTime.time()) + timedelta(days=1)
                 self.state = AlarmStates.wait
 
         if self.state == AlarmStates.alarm:
@@ -123,7 +123,7 @@ class Alarm:
     def stop_alarm(self):
         self.alarm_actual_volume = 10
         self.state = AlarmStates.stop
-        self.resumed=-1
+        self.resumed = -1
 
     def update_daily_alarm(self, hour, minute, days):
         mytime = datetime.now()

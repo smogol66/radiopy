@@ -16,6 +16,7 @@ from kivy.clock import Clock
 from kivy.lang import Builder
 import vlc
 from os import path, walk, system
+import os
 import datetime
 from kivy.config import Config
 from extendedsettings import ExtendedSettings
@@ -91,11 +92,22 @@ def load_media(folder, scan_folders=False):
         media_list = Instance.media_list_new()
         del song_list[:]
 
-    with open('radios.txt') as r:
-        for line in r:
+    try:
+        r = open('radios.txt')
+    except (OSError, IOError):
+        # create the file with some default radios URL
+        r = open('radios.txt','w+')
+        for radio in ['http://stream.srg-ssr.ch/m/rsj/mp3_128  # Radio Swiss Jazz',
+                      'http://streaming.radio.funradio.fr/fun-1-48-192 # FunRadio',
+                      'http://streaming.radio.rtl2.fr/rtl2-1-44-128   # RTL 2',
+                      'http://stream.srg-ssr.ch/m/couleur3/mp3_128  # Couleur 3']:
+            r.write(radio+'\n')
+        r.seek(0)
+
+    for line in r:
             url = line.split('#')[0].strip()
             add_radio(url)
-
+    r.close()
 
     recursive_walk(folder, scan_folders)
 
@@ -448,21 +460,24 @@ class RadioPyApp(App):
         self.reset_blank()
         return sm
 
+    def swap_screen(self, screen):
+        self.root.current = self.lastScreen = screen
+
     def blank_screen(self,*args):
-        self.lastScreen = self.root.current
         if rpi:
             system('sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(7))
         else:
+            self.lastScreen = self.root.current
             print('call to: sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(7))
             self.root.current = 'blank'
 
     def wake_up(self):
-        if self.lastScreen != '':
-            self.root.current = self.lastScreen
         val = self.config.get('Base', 'brightness')
         if rpi:
             system('sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
         else:
+            if self.lastScreen != '':
+                self.root.current = self.lastScreen
             print('call to: sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
 
     def reset_blank(self):
@@ -494,7 +509,7 @@ class RadioPyApp(App):
                 self.alarmRunScr.index=index
                 self.alarmRunScr.alarmText='Alarm {}'.format(index)
                 self.alarmRunScr.mediaText=song_list[alarm.media]['media_file']
-                self.root.current='alarmRun'
+                self.swap_screen('alarmRun')
                 self.stop_blank()
                 self.alarmRun = True
             elif ret == alarms.AlarmStates.alarm and self.alarmRun:
@@ -573,7 +588,7 @@ class RadioPyApp(App):
             self.last_index = index
 
         self.playScr.index = index
-        self.root.current = 'play'
+        self.swap_screen('play')
 
     def stop_and_return(self):
         sub = self.config.get('Base', 'boolsub_folders')
@@ -582,16 +597,16 @@ class RadioPyApp(App):
             load_media(folder, sub)
         except UnicodeDecodeError:
             pass
-        self.root.current = 'play_list'
+        self.swap_screen('play_list')
 
     def show_clock(self):
-        self.root.current = 'clock'
+        self.swap_screen('clock')
 
     def show_player(self):
-        self.root.current = 'play'
+        self.swap_screen('play')
 
     def show_alarms(self):
-        self.root.current = 'alarm_list'
+        self.swap_screen('alarm_list')
 
     def alarm_edit(self,index, more):
         self.alarmScr.index = index
@@ -615,7 +630,7 @@ class RadioPyApp(App):
             self.alarmScr.Day = str(myalarm.alarmDateTime.day).zfill(2)
             self.alarmScr.Month = str(myalarm.alarmDateTime.month).zfill(2)
 
-        self.root.current='alarm'
+        self.swap_screen('alarm')
         save_alarm_db()
 
     def alarm_active(self,index, value):
@@ -658,7 +673,7 @@ class RadioPyApp(App):
 
         days = self.alarmScr.Days
         print(days)
-        self.root.current = 'alarm_list'
+        self.swap_screen('alarm_list')
         save_alarm_db()
 
     def choose_alarm_media(self,index):
@@ -676,20 +691,20 @@ class RadioPyApp(App):
         self.popup.dismiss()
 
     def back_alarm(self):
-        self.root.current = 'alarm_list'
+        self.swap_screen('alarm_list')
         self.reset_blank()
 
     def delete_alarm(self,index):
         del alarms_data[index]
         self.rvsAlarmsScr.populate(alarms_data)
-        self.root.current = 'alarm_list'
+        self.swap_screen('alarm_list')
         self.reset_blank()
         save_alarm_db()
 
     def alarm_stop(self,index):
         alarms_data[index].stop_alarm()
         list_player.stop()
-        self.root.current='clock'
+        self.swap_screen('clock')
         self.alarmRun = False
         self.reset_blank()
 
@@ -698,7 +713,7 @@ class RadioPyApp(App):
         list_player.stop()
         self.reset_blank()
         self.blank_screen()
-        self.root.current='clock'
+        self.swap_screen('clock')
 
 
 if rpi:
