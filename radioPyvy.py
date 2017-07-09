@@ -519,10 +519,8 @@ class RadioPyApp(App):
 
     def check_alarms(self,*args):
         self.clockScr.current_date = datetime.strftime(datetime.now(),"%a, %d %b %Y")
-        alarms_list= []
         for index, alarm in enumerate(alarms_data):
             ret = alarm.check_to_do()
-            alarms_list.append(alarm.timeToWakeUp)
             # print('alarm {} {}, '.format(index,ret),end='')
             if ret == alarms.AlarmStates.alarm and not self.alarmRun:
                 # stop everything and play the alarm song
@@ -544,13 +542,20 @@ class RadioPyApp(App):
                     alarm.alarm_actual_volume += alarm.alarm_vol_inc
                     player.audio_set_volume(int(alarm.alarm_actual_volume))
 
-
+        alarms_list = sorted(alarms_data, key=lambda x: x.timeToWakeUp)
         if alarms_list:
-            alarms_list.sort()
-            time_left = alarms_list[0] - datetime.now()
-            if alarms_
-            self.clockScr.next_alarm = "Next alarm in:\n  {} days, {} hours {} min. {:02} sec.".format(
-                    time_left.days, time_left.seconds//3600, time_left.seconds//60%60, time_left.seconds%60)
+
+            time_left = alarms_list[0].timeToWakeUp - datetime.now()
+            if time_left.days>0:
+                self.clockScr.next_alarm = "Next alarm in:\n  {} days, {} hours {} {} min.".format(
+                        time_left.days, time_left.seconds//3600, time_left.seconds//60%60)
+            elif time_left.seconds//3600 >0:
+                self.clockScr.next_alarm = "Next alarm in:\n {} hours {} min.".format(
+                        time_left.seconds//3600, time_left.seconds//60%60)
+            else:
+                self.clockScr.next_alarm = "Next alarm in:\n {} min. {:02} sec.".format(
+                        time_left.seconds//60%60, time_left.seconds%60)
+
             # self.clockScr.next_alarm = "Next alarm:\n" + datetime.strftime(alarms_list[0],"%a, %d %b %Y %H:%M:%S")
 
     def build_config(self, config):
