@@ -118,6 +118,7 @@ def load_media(folder, scan_folders=False):
 
 
 class MyClockWidget(FloatLayout):
+
     def do_press(self):
         self.ids.label.text = 'pressed'
 
@@ -126,6 +127,7 @@ class MyClockWidget(FloatLayout):
 
 
 class Ticks(Widget):
+
     def __init__(self, **kwargs):
         super(Ticks, self).__init__(**kwargs)
         self.bind(pos=self.update_clock)
@@ -164,6 +166,7 @@ class Ticks(Widget):
 
 
 class ClockScreen(Screen):
+    blank = BooleanProperty(False)
     next_alarm = StringProperty('')
     current_date = StringProperty(datetime.strftime(datetime.now(), "%a, %d %b %Y"))
 
@@ -493,6 +496,7 @@ class RadioPyApp(App):
             print('call to: sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
             # self.root.current = 'blank'
         blank_activated = True
+        self.clockScr.blank = True
 
     def wake_up(self):
         global blank_activated
@@ -504,6 +508,7 @@ class RadioPyApp(App):
                 self.root.current = self.lastScreen
             print('call to: sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
         blank_activated = False
+        self.clockScr.blank = False
 
     def reset_blank(self):
         self.stop_blank()

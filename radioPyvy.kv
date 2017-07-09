@@ -254,13 +254,16 @@
 
 
 [ClockNumber@Label]:
-    text: str(ctx.i)
-    pos_hint: {"center_x": 0.5+0.42*math.sin(math.pi/6*(ctx.i-12)), "center_y": 0.5+0.42*math.cos(math.pi/6*(ctx.i-12))}
+    text: str(ctx.text)
+    pos_hint: {"center_x": 0.5+0.42*math.sin(math.pi/6*(ctx.text-12)), "center_y": 0.5+0.42*math.cos(math.pi/6*(ctx.text-12))}
     font_size: self.height/16
 
 <ClockScreen>:
     face: face
     ticks: ticks
+    bk_ground: 'img/roud_clock.png'
+    bk_ground_blank: 'img/round_clock_blank.png'
+    blank: False
     canvas:
         Color:
             rgb: .3, .3, .3
@@ -322,39 +325,40 @@
         size: min(root.size), min(root.size)
         canvas:
             Color:
-                rgb: 1, 1, 1
+                rgb: 1, 1, 1 if not root.blank else 1,1,0
 #            Ellipse:
 #                size: self.size
 #                pos: self.pos
             Rectangle:
-                source: 'img/roud_clock.png'
+                id:'bk_ground'
+                source: root.bk_ground if not root.blank else root.bk_ground_blank
                 size: self.size
                 pos: self.pos
 
         ClockNumber:
-            i: 1
+            text: 1
         ClockNumber:
-            i: 2
+            text: 2
         ClockNumber:
-            i: 3
+            text: 3
         ClockNumber:
-            i: 4
+            text: 4
         ClockNumber:
-            i: 5
+            text: 5
         ClockNumber:
-            i: 6
+            text: 6
         ClockNumber:
-            i: 7
+            text: 7
         ClockNumber:
-            i: 8
+            text: 8
         ClockNumber:
-            i: 9
+            text: 9
         ClockNumber:
-            i: 10
+            text: 10
         ClockNumber:
-            i: 11
+            text: 11
         ClockNumber:
-            i: 12
+            text: 12
 
     AnchorLayout:
         anchor_x: 'center'
