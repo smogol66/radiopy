@@ -304,12 +304,12 @@
         anchor_y: 'top'
         padding: 10
         BoxLayout:
-            size_hint: 0.5,0.1
+            size_hint: 0.5,0.2
             Button:
                 padding: 5,5
                 text: root.next_alarm # root.alarm_left
                 text_size: self.size
-                font_size: 14
+                font_size: 16
                 halign: 'left'
                 valign: 'top'
                 on_press:
@@ -363,6 +363,7 @@
         Label:
             id: label
             size_hint: 1,0.1
+            font_size: 22
             text: root.current_date
             pos: 0,0
     Ticks:

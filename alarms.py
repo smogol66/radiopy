@@ -1,31 +1,30 @@
-from kivy.app import App
-from kivy.lang import Builder
-from kivy.uix.recycleview import RecycleView
 from kivy.uix.recycleview.views import RecycleDataViewBehavior
 from kivy.uix.popup import Popup
-from kivy.properties import BooleanProperty, NumericProperty, StringProperty
+from kivy.uix.screenmanager import Screen
 from kivy.uix.recycleboxlayout import RecycleBoxLayout
 from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.recycleview.layout import LayoutSelectionBehavior
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.screenmanager import ScreenManager, Screen, SwapTransition
-from kivy.properties import ListProperty, NumericProperty, StringProperty
+from kivy.properties import ListProperty, NumericProperty, StringProperty, BooleanProperty
 from datetime import datetime, timedelta, time
+
 from enum import Enum
 from copy import copy
 
+data_list = []
+
 
 class AlarmStates(Enum):
-    wait=1
-    alarm=2
-    resumed=3
-    stop=4
-    end=5
+    wait = 1
+    alarm = 2
+    resumed = 3
+    stop = 4
+    end = 5
 
 
 class AlarmTypes(Enum):
-    single=0
-    daily=1
+    single = 0
+    daily = 1
 
 
 class Alarm:
@@ -33,7 +32,7 @@ class Alarm:
     resume_delays = [20, 10, 5]
     alarm_vol_inc = 100.0 / 2.0 / 60  # todo: add this as an option : volume delay (time to full volume)
 
-    def __init__(self,atype=AlarmTypes.daily, alarm_time='08:00'):
+    def __init__(self, al_type=AlarmTypes.daily, alarm_time='08:00'):
         self.skipNext = 0
         self.type = None
         self.state = AlarmStates.wait
@@ -45,64 +44,74 @@ class Alarm:
         self.alarm_actual_volume = 10
         self.media = 0
         self.Type = AlarmTypes.daily
-        self.set_alarm(atype, alarm_time)
+        self.set_alarm(al_type, alarm_time)
 
-    def set_alarm(self, atype=AlarmTypes.daily,alarm_time='8:00'):
+    def update_alarm(self):
+        # update alarm if is was in the past
+        my_time = datetime.now()
+        al_time = self.alarmDateTime
+        if self.Type == AlarmTypes.daily:
+            while my_time >= al_time:
+                al_time = al_time + timedelta(days=1)
+        if self.Type == AlarmTypes.single:
+            while my_time >= al_time:
+                al_time = al_time + timedelta(days=365)
+        self.alarmDateTime = copy(al_time)
+        self.timeToWakeUp = copy(al_time)
+        self.resumed = -1
+
+    def set_alarm(self, al_type=AlarmTypes.daily, alarm_time='8:00'):
         # define the alarm with strings
-        self.Type = atype
-        altime=None
+        self.Type = al_type
+        al_time = None
         try:
-            if atype == AlarmTypes.daily:
-                mytime = datetime.now()
-                altime = datetime.combine(mytime.date(),datetime.strptime(alarm_time, '%H:%M').time())
-                if mytime >= altime:
-                    # if alarm in the past, set it in the future
-                    altime = altime + timedelta(days=1)
-                self.daysToWakeUp=range(7)
-            if atype == AlarmTypes.single:
-                altime = datetime.strptime(alarm_time, '%H:%M %d/%m')
-                if altime >= altime:
-                    altime = altime + timedelta(year=1)
-            self.alarmDateTime = self.timeToWakeUp = altime
+            my_time = datetime.now()
+            if self.Type == AlarmTypes.daily:
+                self.alarmDateTime = al_time = datetime.combine(my_time.date(), datetime.strptime(alarm_time, '%H:%M').time())
+                self.daysToWakeUp = range(7)
+            if self.Type == AlarmTypes.single:
+                self.alarmDateTime = datetime.strptime(alarm_time, '%H:%M %d/%m')
+            self.update_alarm()
+
         except (IndexError, TypeError, ValueError):
             raise ValueError('Bad date or time conversion')
 
-    def set_days(self, days=[]):
+    def set_days(self, days):
         self.daysToWakeUp = copy(days)
 
     def check_to_do(self):
-        mytime = datetime.now()
+        my_time = datetime.now()
         if self.skipNext == -1:
             # alarm is disabled
             self.state = AlarmStates.wait
 
         if self.state == AlarmStates.wait:
-            # print('time to go: {}'.format(self.timeToWakeUp-mytime))
+            # print('time to go: {}'.format(self.timeToWakeUp-my_time))
             if self.alarmType == AlarmTypes.daily:
-                if mytime >= self.timeToWakeUp and mytime.weekday() in self.daysToWakeUp:
+                if my_time >= self.timeToWakeUp and my_time.weekday() in self.daysToWakeUp:
                     if self.skipNext == 0:
-                        self.state= AlarmStates.alarm
+                        self.state = AlarmStates.alarm
                     else:
                         self.skipNext -= 1
                         self.state = AlarmStates.stop
             if self.alarmType == AlarmTypes.single:
-                if mytime >= self.timeToWakeUp:
+                if my_time >= self.timeToWakeUp:
                     self.state = AlarmStates.alarm
 
         if self.state == AlarmStates.resumed:
-            # print('resume time to go: {}'.format(self.timeToWakeUp - mytime))
-            if mytime >= self.timeToWakeUp:
+            # print('resume time to go: {}'.format(self.timeToWakeUp - my_time))
+            if my_time >= self.timeToWakeUp:
                 self.state = AlarmStates.alarm
 
         if self.state == AlarmStates.stop:
             if self.alarmType == AlarmTypes.single:
                 self.state = AlarmStates.end
             if self.alarmType == AlarmTypes.daily:
-                self.timeToWakeUp = datetime.combine(mytime.date(), self.alarmDateTime.time()) + timedelta(days=1)
                 self.state = AlarmStates.wait
+                self.update_alarm()
 
         if self.state == AlarmStates.alarm:
-            time_run = mytime - self.timeToWakeUp
+            time_run = my_time - self.timeToWakeUp
             if time_run >= timedelta(minutes=10):
                 self.state = AlarmStates.stop
 
@@ -110,33 +119,32 @@ class Alarm:
 
     def resume_alarm(self):
         self.resumed += 1
-        mytime = datetime.now()
-        rdelay = 0
+        my_time = datetime.now()
         if self.resumed >= len(self.resume_delays):
-            rdelay = self.resume_delays[ - 1]
-            self.resumed= len(self.resume_delays) - 1
+            r_delay = self.resume_delays[-1]
+            self.resumed = len(self.resume_delays) - 1
         else:
-            rdelay = self.resume_delays[self.resumed]
-        self.timeToWakeUp = mytime + timedelta( seconds= rdelay)
+            r_delay = self.resume_delays[self.resumed]
+        self.timeToWakeUp = my_time + timedelta(seconds=r_delay)
         self.state = AlarmStates.resumed
 
     def stop_alarm(self):
         self.alarm_actual_volume = 10
         self.state = AlarmStates.stop
-        self.resumed = -1
+        self.update_alarm()
 
     def update_daily_alarm(self, hour, minute, days):
-        mytime = datetime.now()
-        self.alarmDateTime=self.alarmDateTime.combine(mytime.date(), time(hour=int(hour), minute=int(minute)))
-        if mytime >= self.alarmDateTime:
+        my_time = datetime.now()
+        self.alarmDateTime = self.alarmDateTime.combine(my_time.date(), time(hour=int(hour), minute=int(minute)))
+        if my_time >= self.alarmDateTime:
             # if alarm in the past, set it in the future
             self.alarmDateTime += timedelta(days=1)
-        daysenum = []
-        for daynum,day in enumerate(days):
-            if day==True:
-                daysenum.append(daynum)
+        days_enum = []
+        for day_num, day in enumerate(days):
+            if day:
+                days_enum.append(day_num)
         del self.daysToWakeUp[:]
-        self.daysToWakeUp = copy(daysenum)
+        self.daysToWakeUp = copy(days_enum)
         self.timeToWakeUp = self.alarmDateTime
         self.alarmType = AlarmTypes.daily
 
@@ -145,15 +153,15 @@ class Alarm:
         self.alarmDateTime = datetime(month=int(month), day=int(day), year=mytime.year,
                                       hour=int(hour), minute=int(minute))
         if self.alarmDateTime <= mytime:
-            self.alarmDateTime = datetime(month=int(month), day=int(day), year=mytime.year + 1,
-                                      hour=int(hour), minute=int(minute))
+            self.alarmDateTime = datetime(month=int(month), day=int(day), year=mytime.year + 1, hour=int(hour),
+                                          minute=int(minute))
         self.timeToWakeUp = self.alarmDateTime
         self.alarmType = AlarmTypes.single
 
 
 class SelectableRecycleBoxLayout(FocusBehavior, LayoutSelectionBehavior,
                                  RecycleBoxLayout):
-    ''' Adds selection and focus behaviour to the view. '''
+    # Adds selection and focus behaviour to the view.
     pass
 
 
@@ -167,55 +175,54 @@ class SelectableLabel(RecycleDataViewBehavior, BoxLayout):
     selectable = BooleanProperty(True)
 
     def refresh_view_attrs(self, rv, index, data):
-        ''' Catch and handle the view changes '''
+        # Catch and handle the view changes
         self.index = index
         return super(SelectableLabel, self).refresh_view_attrs(
             rv, index, data)
 
     def on_touch_down(self, touch):
-        ''' Add selection on touch down '''
+        # Add selection on touch down
         if super(SelectableLabel, self).on_touch_down(touch):
             return True
         if self.collide_point(*touch.pos) and self.selectable:
             return self.parent.select_with_touch(self.index, touch)
 
     def apply_selection(self, rv, index, is_selected):
-        ''' Respond to the selection of items in the view. '''
+        # Respond to the selection of items in the view.
         self.selected = is_selected
         if is_selected:
             print("selection changed to {0}".format(rv.data[index]))
         else:
             print("selection removed for {0}".format(rv.data[index]))
 
-data_list = []
 
 class RVSAlarmScreen(Screen):
 
-    def populate(self,database):
+    def populate(self, database):
 
         if type(database) is list:
             if not database:
                 return
             if isinstance(database[0], Alarm):
                 # populathe the data with the values dictionaryy of alarm list
-                del data_list [:]
+                del data_list[:]
                 for alarm in database:
                     print (alarm.alarmType, alarm.alarmDateTime)
-                    data_list.append({'value':datetime.strftime(alarm.alarmDateTime,'%H:%M'),\
-                                      'type':'daily' if alarm.alarmType==AlarmTypes.daily else 'once',
-                                      'skip_next':'enabled' if alarm.skipNext == 0 else 'skip ' + str(alarm.skipNext) \
-                                                        if alarm.skipNext>0 else 'paused'},)
-                self.rv.data=data_list
+                    data_list.append({'value': datetime.strftime(alarm.alarmDateTime, '%H:%M'),
+                                      'type': 'daily' if alarm.alarmType == AlarmTypes.daily else 'once',
+                                      'skip_next': 'enabled' if alarm.skipNext == 0 else 'skip ' + str(alarm.skipNext)
+                                      if alarm.skipNext > 0 else 'paused'}, )
+                self.rv.data = data_list
 
     def update(self, alarm, index):
         if self.rv.data:
             self.rv.data[index]['value'] = alarm.alarmDateTime.strftime('%H:%M') or 'default new value'
-            self.rv.data[index]['type'] = 'daily' if alarm.alarmType==AlarmTypes.daily else 'single'
+            self.rv.data[index]['type'] = 'daily' if alarm.alarmType == AlarmTypes.daily else 'single'
             self.rv.data[index]['skip_next'] = 'enabled' if alarm.skipNext == 0 else 'skip ' + str(alarm.skipNext) \
-                                                        if alarm.skipNext>0 else 'paused'
+                if alarm.skipNext > 0 else 'paused'
             self.rv.refresh_from_data()
 
-    def remove(self,index):
+    def remove(self, index):
         del self.rv.data[index]
         self.rv.refresh_from_data()
 
@@ -228,7 +235,7 @@ class AlarmScreen(Screen):
     Hour = StringProperty('08')
     Month = StringProperty('01')
     Day = StringProperty('01')
-    Days = ListProperty([True, False, True,False,False,False,False])
+    Days = ListProperty([True, False, True, False, False, False, False])
     media = StringProperty('')
 
 

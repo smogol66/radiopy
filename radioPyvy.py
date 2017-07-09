@@ -14,15 +14,14 @@ from kivy.uix.floatlayout import FloatLayout
 from math import cos, sin, pi
 from kivy.clock import Clock
 from kivy.lang import Builder
-import vlc
 from os import path, walk, system
-import os
 from datetime import datetime
 from kivy.config import Config
 from extendedsettings import ExtendedSettings
 from settingsjson import settings_json
 import alarms
 import pickle
+import vlc
 
 
 ALARMS_FILE = 'alarms.dat'
@@ -44,10 +43,12 @@ def save_alarm_db():
 try:
     with open(ALARMS_FILE) as f:
         alarms_data = pickle.load(f)
+    for alarm in alarms_data:
+        alarm.update_alarm()
 
 except:
     print('Error trying to load file')
-    alarms_data = [alarms.Alarm(), alarms.Alarm(atype=alarms.AlarmTypes.daily, alarm_time='10:00')]
+    alarms_data = [alarms.Alarm(), alarms.Alarm(al_type=alarms.AlarmTypes.daily, alarm_time='10:00')]
     save_alarm_db()
 
 
@@ -542,14 +543,12 @@ class RadioPyApp(App):
                 if alarm.alarm_actual_volume < vol:
                     alarm.alarm_actual_volume += alarm.alarm_vol_inc
                     player.audio_set_volume(int(alarm.alarm_actual_volume))
-            elif ret == alarms.AlarmStates.resumed:
-                if self.alarmRun:
-                    print('next resume time: {}'.format(alarm.timeToWakeUp))
-                    save_alarm_db()
+
 
         if alarms_list:
             alarms_list.sort()
             time_left = alarms_list[0] - datetime.now()
+            if alarms_
             self.clockScr.next_alarm = "Next alarm in:\n  {} days, {} hours {} min. {:02} sec.".format(
                     time_left.days, time_left.seconds//3600, time_left.seconds//60%60, time_left.seconds%60)
             # self.clockScr.next_alarm = "Next alarm:\n" + datetime.strftime(alarms_list[0],"%a, %d %b %Y %H:%M:%S")
