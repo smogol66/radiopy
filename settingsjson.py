@@ -49,7 +49,7 @@ settings_json = json.dumps([
      'desc': 'Time to next resumes in min.',
      'section': 'Base',
      'key': 'resume_scheme',
-     'options': ['20,10,5', '10,10,10', '0.167,0.167,0.167']},
+     'options': ['20,10,5', '10,10,10', '0.334,0.25,0.167']},
 
     {'type': 'bool',
      'title': 'Power down',

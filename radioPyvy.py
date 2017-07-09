@@ -34,13 +34,7 @@ except ImportError:
     rpi = False
 
 
-def save_alarm_db(config):
-    if alarms_data and config:
-        val = config.get('Base', 'resume_scheme')
-        resume_al =[]
-        for res_al in val.split(','):
-            resume_al.append(float(res_al) * 60)
-        alarms_data[0].resume_delays=resume_al
+def save_alarm_db():
     with open(ALARMS_FILE, 'wb') as f:
         pickle.dump(alarms_data, f)
 
@@ -54,12 +48,13 @@ try:
 except:
     print('Error trying to load file')
     alarms_data = [alarms.Alarm(), alarms.Alarm(atype=alarms.AlarmTypes.daily, alarm_time='10:00')]
-    save_alarm_db(None)
+    save_alarm_db()
 
 
 media_list = None
 song_list = []
 blank_activated = False
+
 
 def load_media(folder, scan_folders=False):
 
@@ -521,7 +516,6 @@ class RadioPyApp(App):
             self.BlankSchedule.cancel()
         self.wake_up()
 
-
     def check_alarms(self,*args):
         self.clockScr.current_date = datetime.strftime(datetime.now(),"%a, %d %b %Y")
         alarms_list= []
@@ -535,14 +529,13 @@ class RadioPyApp(App):
                 self.stop_blank()
                 list_player.stop()
                 list_player.play_item_at_index(alarm.media)
-                player.audio_set_volume(int(alarm.alarm_actual_volume))
+                player.audio_set_volume(0)
                 self.alarmRunScr.index=index
                 self.alarmRunScr.alarmText='Alarm {}'.format(index)
                 self.alarmRunScr.mediaText=song_list[alarm.media]['media_file']
                 self.swap_screen('alarmRun')
                 self.alarmRun = True
             elif ret == alarms.AlarmStates.alarm and self.alarmRun:
-                # stop everything and play the alarm song
                 self.BlankSchedule.cancel()
                 vol = int(self.config.get('Base','startupvolume'))
                 vol = vol * 1.2 if vol*1.2<100 else 100
@@ -552,8 +545,8 @@ class RadioPyApp(App):
             elif ret == alarms.AlarmStates.resumed:
                 if self.alarmRun:
                     print('next resume time: {}'.format(alarm.timeToWakeUp))
-                    save_alarm_db(self.config)
-                self.alarmRun = False
+                    save_alarm_db()
+
         if alarms_list:
             alarms_list.sort()
             time_left = alarms_list[0] - datetime.now()
@@ -623,7 +616,7 @@ class RadioPyApp(App):
             else:
                 print('call to: sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
             config.read("radiopy.ini")
-        save_alarm_db(config)
+        save_alarm_db()
 
     def on_menu_selection(self, index):
         if index != self.last_index:
@@ -676,7 +669,7 @@ class RadioPyApp(App):
             self.alarmScr.Month = str(myalarm.alarmDateTime.month).zfill(2)
 
         self.swap_screen('alarm')
-        save_alarm_db(self.config)
+        save_alarm_db()
 
     def alarm_active(self,index):
         self.popup = alarms.DisableAlarmPopup()
@@ -686,9 +679,8 @@ class RadioPyApp(App):
     def alarm_skipped(self,index,skip_next):
         alarms_data[index].skipNext = 0 if skip_next == 'none' else -1 if skip_next == 'all' else int(skip_next)
         self.popup.dismiss()
-        save_alarm_db(self.config)
+        save_alarm_db()
         self.rvsAlarmsScr.update(alarms_data[index], index)
-
 
     def alarm_add(self):
         alarms_data.append(alarms.Alarm())
@@ -714,7 +706,7 @@ class RadioPyApp(App):
         days = self.alarmScr.Days
         print(days)
         self.swap_screen('alarm_list')
-        save_alarm_db(self.config)
+        save_alarm_db()
 
     def alarm_choose_media(self, index):
         self.popup = SongPopup()
@@ -739,21 +731,30 @@ class RadioPyApp(App):
         self.rvsAlarmsScr.populate(alarms_data)
         self.swap_screen('alarm_list')
         self.reset_blank()
-        save_alarm_db(self.config)
+        save_alarm_db()
 
-    def alarm_stop(self,index):
-        alarms_data[index].stop_alarm()
+    def alarm_stop(self):
+        for al_index, alarm in enumerate(alarms_data):
+            if alarm.state != alarms.AlarmStates.wait:
+                alarms_data[al_index].stop_alarm()
         list_player.stop()
         self.swap_screen('clock')
         self.alarmRun = False
         self.reset_blank()
 
     def alarm_resume(self,index):
+        if alarms_data:
+            val = self.config.get('Base', 'resume_scheme')
+            resume_al = []
+            for res_al in val.split(','):
+                resume_al.append(float(res_al) * 60)
+            alarms_data[index].resume_delays = resume_al
         alarms_data[index].resume_alarm()
         list_player.stop()
         self.reset_blank()
         self.blank_screen()
         self.swap_screen('clock')
+        self.alarmRun = False
 
 
 if rpi:

@@ -113,7 +113,7 @@ class Alarm:
         mytime = datetime.now()
         rdelay = 0
         if self.resumed >= len(self.resume_delays):
-            rdelay = self.resume_delays[len(self.resume_delays) - 1]
+            rdelay = self.resume_delays[ - 1]
             self.resumed= len(self.resume_delays) - 1
         else:
             rdelay = self.resume_delays[self.resumed]
