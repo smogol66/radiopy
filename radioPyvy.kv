@@ -255,6 +255,7 @@
             size: self.size
     on_touch_down:
         app.reset_blank()
+
     AnchorLayout:
         anchor_x: 'left'
         anchor_y: 'bottom'
@@ -288,8 +289,15 @@
     AnchorLayout:
         anchor_x: 'left'
         anchor_y: 'top'
-        Label:
-            text: root.alarm_left
+        padding: 10
+        BoxLayout:
+            size_hint: 0.4,0.1
+            Label:
+                text: root.next_alarm # root.alarm_left
+                text_size: self.size
+                font_size: 14
+                halign: 'left'
+                valign: 'top'
 
     FloatLayout:
         id: face
@@ -332,15 +340,18 @@
         ClockNumber:
             i: 12
 
+    AnchorLayout:
+        anchor_x: 'center'
+        anchor_y: 'bottom'
+        padding: 0,100
+        Label:
+            id: label
+            size_hint: 1,0.1
+            text: root.current_date
+            pos: 0,0
     Ticks:
         id: ticks
         r: min(root.size)*0.7/2
-
-    Label:
-        id: label
-        size_hint: 1,0.1
-        text: ''
-        pos: 0,0
 
 <BlankScreen>
     BoxLayout:

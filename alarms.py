@@ -30,8 +30,8 @@ class AlarmTypes(Enum):
 
 class Alarm:
     """Alarm class to handle all the thing to do with clock alarms"""
-    resumeDelay = [20 * 60, 10 * 30, 5 * 60]  # todo: add this to the alarm screen as an option
-    alarm_vol_inc =  100.0 / 2.0 / 60  # todo: add this as an option : volume delay (time to full volume)
+    resume_delays = [20, 10, 5]
+    alarm_vol_inc = 100.0 / 2.0 / 60  # todo: add this as an option : volume delay (time to full volume)
 
     def __init__(self,atype=AlarmTypes.daily, alarm_time='08:00'):
         self.skipNext = 0
@@ -112,11 +112,11 @@ class Alarm:
         self.resumed += 1
         mytime = datetime.now()
         rdelay = 0
-        if self.resumed >= len(self.resumeDelay):
-            rdelay = self.resumeDelay[len(self.resumeDelay)-1]
-            self.resumed=len(self.resumeDelay)-1
+        if self.resumed >= len(self.resume_delays):
+            rdelay = self.resume_delays[len(self.resume_delays) - 1]
+            self.resumed= len(self.resume_delays) - 1
         else:
-            rdelay = self.resumeDelay[self.resumed]
+            rdelay = self.resume_delays[self.resumed]
         self.timeToWakeUp = mytime + timedelta( seconds= rdelay)
         self.state = AlarmStates.resumed
 
@@ -193,7 +193,9 @@ class RVSAlarmScreen(Screen):
     def populate(self,database):
 
         if type(database) is list:
-            if isinstance(database[0],Alarm):
+            if not database:
+                return
+            if isinstance(database[0], Alarm):
                 # populathe the data with the values dictionaryy of alarm list
                 del data_list [:]
                 for alarm in database:
