@@ -2,6 +2,7 @@
 #:import factory kivy.factory
 #:import ListItemButton kivy.uix.listview.ListItemButton
 #:import math math
+<listMediaSelectable>:
 
 <MediaSelectable>:
     # Draw a background to indicate selection
@@ -16,21 +17,21 @@
     BoxLayout:
         padding: 5
         Label:
+            text: root.songTitle
             size_hint_x: 0.6
             text_size: self.size
             halign: 'left'
             valign: 'middle'
-            text: root.songTitle
         Label:
+            text: root.artist
             size_hint_x: 0.15
             text_size: self.size
             halign: 'left'
             valign: 'middle'
-            text: root.artist
         Label:
+            text: root.type
             size_hint_x: 0.2
             halign: 'left'
-            text: root.type
 
         ButtonImage:
             size_hint_x: 0.05
@@ -48,25 +49,25 @@
             size: self.size
             pos: self.pos
 
-    # active: True
     BoxLayout:
         padding: 5
         Label:
+            text: root.songTitle
             size_hint_x: 0.6
             text_size: self.size
             halign: 'left'
             valign: 'middle'
-            text: root.songTitle
         Label:
+            text: root.artist
             size_hint_x: 0.15
             text_size: self.size
             halign: 'left'
             valign: 'middle'
-            text: root.artist
+
         Label:
+            text: root.type
             size_hint_x: 0.2
             halign: 'left'
-            text: root.type
 
         ButtonImage:
             size_hint_x: 0.05
@@ -190,6 +191,18 @@
                         root.next_song()
 
         AnchorLayout:
+            anchor_x: 'left'
+            anchor_y: 'top'
+            padding: 10
+            BoxLayout:
+                size_hint: 0.1,0.1
+                ButtonImage:
+                    size: 50,50
+                    source: 'img/home.png'
+                    on_press:
+                        app.show_clock()
+
+        AnchorLayout:
             anchor_x: 'right'
             anchor_y: 'top'
             BoxLayout:
@@ -291,13 +304,15 @@
         anchor_y: 'top'
         padding: 10
         BoxLayout:
-            size_hint: 0.4,0.1
-            Label:
+            size_hint: 0.5,0.1
+            Button:
+                padding: 5,5
                 text: root.next_alarm # root.alarm_left
                 text_size: self.size
                 font_size: 14
                 halign: 'left'
                 valign: 'top'
+                on_press:
 
     FloatLayout:
         id: face

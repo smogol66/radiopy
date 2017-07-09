@@ -235,6 +235,7 @@ class MediaSelectable(RecycleDataViewBehavior, BoxLayout):
     def select(self, index):
         self.selected = True
         self.parent.select_with_touch(index)
+        self.index = index
 
 
 class AlarmMediaSelectable(RecycleDataViewBehavior, BoxLayout):
@@ -289,6 +290,7 @@ class AlarmMediaSelectable(RecycleDataViewBehavior, BoxLayout):
     def select(self, index):
         self.selected = True
         self.parent.select_with_touch(index)
+        self.index = index
 
 
 class RVSongScreen(Screen):
@@ -621,6 +623,7 @@ class RadioPyApp(App):
             else:
                 print('call to: sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
             config.read("radiopy.ini")
+        save_alarm_db(config)
 
     def on_menu_selection(self, index):
         if index != self.last_index:
@@ -636,7 +639,10 @@ class RadioPyApp(App):
             load_media(folder, sub)
         except UnicodeDecodeError:
             pass
-        self.swap_screen('play_list')
+        if list_player.is_playing() and self.root.current != 'play':
+            self.swap_screen('play')
+        else:
+            self.swap_screen('play_list')
 
     def show_clock(self):
         self.swap_screen('clock')
@@ -672,29 +678,24 @@ class RadioPyApp(App):
         self.swap_screen('alarm')
         save_alarm_db(self.config)
 
-    def alarm_active(self,index, value):
-        if value:
-            print('alarm {} activated'.format(index))
-            alarms_data[index].skipNext=0
-            save_alarm_db(self.config)
-        else:
-            self.popup = alarms.DisableAlarmPopup()
-            self.popup.index = index
-            self.popup.open()
-            print('alarm {} disabled'.format(index))
+    def alarm_active(self,index):
+        self.popup = alarms.DisableAlarmPopup()
+        self.popup.index = index
+        self.popup.open()
 
     def alarm_skipped(self,index,skip_next):
-        alarms_data[index].skipNext = int(skip_next) if skip_next != 'all' else -1
+        alarms_data[index].skipNext = 0 if skip_next == 'none' else -1 if skip_next == 'all' else int(skip_next)
         self.popup.dismiss()
         save_alarm_db(self.config)
+        self.rvsAlarmsScr.update(alarms_data[index], index)
 
 
-    def add_alarm(self):
+    def alarm_add(self):
         alarms_data.append(alarms.Alarm())
         self.rvsAlarmsScr.populate(alarms_data)
         self.alarm_edit(len(alarms_data)-1,'single')
 
-    def set_alarm(self,index):
+    def alarm_set(self,index):
         print('AlarmType: {} at index {}'.format(self.alarmScr.AlarmType, index))
 
         if self.alarmScr.AlarmType == 'daily':
@@ -715,7 +716,7 @@ class RadioPyApp(App):
         self.swap_screen('alarm_list')
         save_alarm_db(self.config)
 
-    def choose_alarm_media(self,index):
+    def alarm_choose_media(self, index):
         self.popup = SongPopup()
         self.popup.populate()
         self.popup.alarmIndex = index
@@ -733,7 +734,7 @@ class RadioPyApp(App):
         self.swap_screen('alarm_list')
         self.reset_blank()
 
-    def delete_alarm(self,index):
+    def alarm_delete(self, index):
         del alarms_data[index]
         self.rvsAlarmsScr.populate(alarms_data)
         self.swap_screen('alarm_list')

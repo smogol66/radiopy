@@ -160,6 +160,7 @@ class SelectableRecycleBoxLayout(FocusBehavior, LayoutSelectionBehavior,
 class SelectableLabel(RecycleDataViewBehavior, BoxLayout):
     value = StringProperty('')
     type = StringProperty('')
+    skip_next = StringProperty('')
     ''' Add selection support to the Label '''
     index = None
     selected = BooleanProperty(False)
@@ -201,13 +202,17 @@ class RVSAlarmScreen(Screen):
                 for alarm in database:
                     print (alarm.alarmType, alarm.alarmDateTime)
                     data_list.append({'value':datetime.strftime(alarm.alarmDateTime,'%H:%M'),\
-                                      'type':'daily' if alarm.alarmType==AlarmTypes.daily else 'once'})
+                                      'type':'daily' if alarm.alarmType==AlarmTypes.daily else 'once',
+                                      'skip_next':'enabled' if alarm.skipNext == 0 else 'skip ' + str(alarm.skipNext) \
+                                                        if alarm.skipNext>0 else 'paused'},)
                 self.rv.data=data_list
 
     def update(self, alarm, index):
         if self.rv.data:
             self.rv.data[index]['value'] = alarm.alarmDateTime.strftime('%H:%M') or 'default new value'
             self.rv.data[index]['type'] = 'daily' if alarm.alarmType==AlarmTypes.daily else 'single'
+            self.rv.data[index]['skip_next'] = 'enabled' if alarm.skipNext == 0 else 'skip ' + str(alarm.skipNext) \
+                                                        if alarm.skipNext>0 else 'paused'
             self.rv.refresh_from_data()
 
     def remove(self,index):

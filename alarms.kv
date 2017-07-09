@@ -7,27 +7,29 @@
             size: self.size
             pos: self.pos
 
-    active: True
     BoxLayout:
         padding: 5
         Label:
             id: one
             halign: 'left'
             text: root.value + '\n' + root.type
-        CheckBox:
-            active: root.active
-            size_hint_x: 0.06
+        Button:
+            text: root.skip_next
+            size_hint_x: 0.10
             id: two
-            on_active: app.alarm_active(root.index, self.active)
-        ButtonImage:
-            size_hint_x: 0.05
-            source: 'img/edit.png'
-            on_press: app.alarm_edit(root.index,root.type)
+            on_press: app.alarm_active(root.index)
+        BoxLayout:
+            size_hint_x: 0.10
+            padding: 5
+            ButtonImage:
+                source: 'img/edit.png'
+                on_press: app.alarm_edit(root.index,root.type)
 
 <RVSAlarmScreen>
     on_touch_down:
         app.reset_blank()
     rv: rv
+    padding: 10
     RecycleView:
         id: rv
         viewclass: 'SelectableLabel'
@@ -40,16 +42,16 @@
             multiselect: False
             touch_multiselect: True
     AnchorLayout:
-        anchor_x: 'left'
+        anchor_x: 'right'
         anchor_y: 'bottom'
         ButtonImage:
             size: 50,50
             size_hint: None, None
             source: 'img/add_2.png'
-            on_press: app.add_alarm()
+            on_press: app.alarm_add()
     AnchorLayout:
         anchor_x: 'left'
-        anchor_y: 'top'
+        anchor_y: 'bottom'
         ButtonImage:
             size: 50,50
             size_hint: None, None
@@ -57,14 +59,18 @@
             on_press: app.show_clock()
 
 <DisableAlarmPopup@Popup>
+    title: 'Disable Alarm'
+    pos_hint: {'center_x': 0.5, 'center_y': 0.45}
+    size_hint: .8, .7
     BoxLayout:
         orientation: 'vertical'
         Label:
             text: 'Disable next alarms'
         Spinner:
             size_hint_x: .8
+            pos_hint_x: 0.5
             font_size: self.height * 0.7
-            values: ['all','1','2','3','4','5','6','7']
+            values: ['all','none','1','2','3','4','5','6','7']
             text: root.next_alarms
             id: 'next_alarms'
             on_text:
@@ -77,7 +83,8 @@
                     app.alarm_skipped(root.index, root.next_alarms)
             Button:
                 text: 'cancel'
-                on_press: root.dismiss()
+                on_press:
+                    root.dismiss()
 
 
 <AlarmScreen>:
@@ -91,6 +98,7 @@
             Rectangle:
                 size: self.size
                 pos: self.pos
+
         AnchorLayout:
             anchor_x: 'center'
             anchor_y: 'top'
@@ -245,7 +253,7 @@
                 text: '...'
                 size_hint_x: 0.1
                 on_press:
-                    app.choose_alarm_media(root.index)
+                    app.alarm_choose_media(root.index)
         AnchorLayout:
             anchor_x: 'center'
             anchor_y: 'bottom'
@@ -261,7 +269,7 @@
                 Button:
                     text: 'OK'
                     on_press:
-                        app.set_alarm(root.index)
+                        app.alarm_set(root.index)
                 Button:
                     text: 'cancel'
                     on_press:
@@ -269,7 +277,7 @@
                 Button:
                     text: 'delete'
                     on_press:
-                        app.delete_alarm(root.index)
+                        app.alarm_delete(root.index)
 
 
 <AlarmRunScreen>
