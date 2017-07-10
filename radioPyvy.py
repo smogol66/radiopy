@@ -541,20 +541,25 @@ class RadioPyApp(App):
                 self.alarmRun = True
             elif ret == alarms.AlarmStates.alarm and self.alarmRun:
                 self.BlankSchedule.cancel()
-                vol = int(self.config.get('Base','startupvolume'))
-                vol = vol * 1.2 if vol*1.2<100 else 100
+                vol = int(self.config.get('Base','startupvolume')) * 1.2
+                if vol < 100:
+                    vol = 100 # limits to max volume
                 if alarm.alarm_actual_volume < vol:
                     alarm.alarm_actual_volume += alarm.alarm_vol_inc
+                    if alarm.alarm_actual_volume > 100.0:
+                        alarm.alarm_actual_volume = 100
                     player.audio_set_volume(int(alarm.alarm_actual_volume))
 
         alarms_list = sorted(alarms_data, key=lambda x: x.timeToWakeUp)
         if alarms_list:
 
             time_left = alarms_list[0].timeToWakeUp - datetime.now()
-            if time_left.days>0:
-                self.clockScr.next_alarm = "Next alarm in:\n  {} days, {} hours {} {} min.".format(
+            if 0 > time_left.days > 365:
+                self.clockScr.next_alarm = "Next alarm in:\n  {} days, {} hours {} min.".format(
                         time_left.days, time_left.seconds//3600, time_left.seconds//60%60)
-            elif time_left.seconds//3600 >0:
+            elif time_left.days > 365:
+                self.clockScr.next_alarm = "No alarm planned"
+            elif time_left.seconds//3600 > 0:
                 self.clockScr.next_alarm = "Next alarm in:\n {} hours {} min.".format(
                         time_left.seconds//3600, time_left.seconds//60%60)
             else:
@@ -686,7 +691,8 @@ class RadioPyApp(App):
         self.popup.open()
 
     def alarm_skipped(self,index,skip_next):
-        alarms_data[index].skipNext = 0 if skip_next == 'none' else -1 if skip_next == 'all' else int(skip_next)
+        skipped = 0 if skip_next == 'none' else -1 if skip_next == 'all' else int(skip_next)
+        alarms_data[index].skip_days(skipped)
         self.popup.dismiss()
         save_alarm_db()
         self.rvsAlarmsScr.update(alarms_data[index], index)
@@ -740,6 +746,7 @@ class RadioPyApp(App):
         self.rvsAlarmsScr.populate(alarms_data)
         self.swap_screen('alarm_list')
         self.reset_blank()
+        self.rvsAlarmsScr.update(alarms_data[index], index)
         save_alarm_db()
 
     def alarm_stop(self):

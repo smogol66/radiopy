@@ -33,7 +33,6 @@ class Alarm:
     alarm_vol_inc = 100.0 / 2.0 / 60  # todo: add this as an option : volume delay (time to full volume)
 
     def __init__(self, al_type=AlarmTypes.daily, alarm_time='08:00'):
-        self.skipNext = 0
         self.type = None
         self.state = AlarmStates.wait
         self.alarmType = AlarmTypes.daily
@@ -49,14 +48,16 @@ class Alarm:
     def update_alarm(self):
         # update alarm if is was in the past
         my_time = datetime.now()
-        al_time = self.alarmDateTime
+        al_time = self.timeToWakeUp
         if self.Type == AlarmTypes.daily:
+            days=1
             while my_time >= al_time:
-                al_time = al_time + timedelta(days=1)
+                al_time = self.alarmDateTime + timedelta(days=days)
+                days += 1
+
         if self.Type == AlarmTypes.single:
             while my_time >= al_time:
                 al_time = al_time + timedelta(days=365)
-        self.alarmDateTime = copy(al_time)
         self.timeToWakeUp = copy(al_time)
         self.resumed = -1
 
@@ -81,19 +82,11 @@ class Alarm:
 
     def check_to_do(self):
         my_time = datetime.now()
-        if self.skipNext == -1:
-            # alarm is disabled
-            self.state = AlarmStates.wait
-
         if self.state == AlarmStates.wait:
             # print('time to go: {}'.format(self.timeToWakeUp-my_time))
             if self.alarmType == AlarmTypes.daily:
                 if my_time >= self.timeToWakeUp and my_time.weekday() in self.daysToWakeUp:
-                    if self.skipNext == 0:
-                        self.state = AlarmStates.alarm
-                    else:
-                        self.skipNext -= 1
-                        self.state = AlarmStates.stop
+                    self.state = AlarmStates.alarm
             if self.alarmType == AlarmTypes.single:
                 if my_time >= self.timeToWakeUp:
                     self.state = AlarmStates.alarm
@@ -119,6 +112,7 @@ class Alarm:
 
     def resume_alarm(self):
         self.resumed += 1
+        self.alarm_actual_volume = 10
         my_time = datetime.now()
         if self.resumed >= len(self.resume_delays):
             r_delay = self.resume_delays[-1]
@@ -157,6 +151,21 @@ class Alarm:
                                           minute=int(minute))
         self.timeToWakeUp = self.alarmDateTime
         self.alarmType = AlarmTypes.single
+
+    def skip_days(self,days):
+        if days >= 0:
+            next_alarm = self.alarmDateTime + timedelta(days=days)
+        else:
+            next_alarm = self.alarmDateTime + timedelta(days=1000)
+        self.timeToWakeUp = copy(next_alarm)
+        self.update_alarm()
+
+    def getNextSkipped(self):
+        delay = self.timeToWakeUp - self.alarmDateTime
+        if delay.days > 7:
+            # extend the alarm
+            self.timeToWakeUp +=  timedelta(days=1000)
+        return delay.days if delay.days < 7 else -1
 
 
 class SelectableRecycleBoxLayout(FocusBehavior, LayoutSelectionBehavior,
@@ -208,18 +217,20 @@ class RVSAlarmScreen(Screen):
                 del data_list[:]
                 for alarm in database:
                     print (alarm.alarmType, alarm.alarmDateTime)
+                    skip = alarm.getNextSkipped()
                     data_list.append({'value': datetime.strftime(alarm.alarmDateTime, '%H:%M'),
                                       'type': 'daily' if alarm.alarmType == AlarmTypes.daily else 'once',
-                                      'skip_next': 'enabled' if alarm.skipNext == 0 else 'skip ' + str(alarm.skipNext)
-                                      if alarm.skipNext > 0 else 'paused'}, )
+                                      'skip_next': 'enabled' if skip == 0 else 'skip {}'.format(skip)
+                                        if skip > 0 else 'paused'}, )
                 self.rv.data = data_list
 
     def update(self, alarm, index):
         if self.rv.data:
             self.rv.data[index]['value'] = alarm.alarmDateTime.strftime('%H:%M') or 'default new value'
             self.rv.data[index]['type'] = 'daily' if alarm.alarmType == AlarmTypes.daily else 'single'
-            self.rv.data[index]['skip_next'] = 'enabled' if alarm.skipNext == 0 else 'skip ' + str(alarm.skipNext) \
-                if alarm.skipNext > 0 else 'paused'
+            skip = alarm.getNextSkipped()
+            self.rv.data[index]['skip_next'] = 'enabled' if skip == 0 else 'skip ' + str(skip) \
+                if skip > 0 else 'paused'
             self.rv.refresh_from_data()
 
     def remove(self, index):
