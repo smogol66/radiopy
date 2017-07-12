@@ -14,7 +14,9 @@
             halign: 'left'
             text: root.value + '\n' + root.type
         Button:
+            id: alarm_skip
             text: root.skip_next
+            # disabled: root.status
             size_hint_x: 0.10
             id: two
             on_press: app.alarm_active(root.index)

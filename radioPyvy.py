@@ -1,7 +1,6 @@
 from __future__ import print_function
 from kivy.uix.recycleview.views import RecycleDataViewBehavior
 from kivy.uix.recycleboxlayout import RecycleBoxLayout
-from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.recycleview.layout import LayoutSelectionBehavior
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.screenmanager import ScreenManager, Screen, SwapTransition
@@ -177,7 +176,7 @@ class ClockScreen(Screen):
         self.ids.label.text = ''
 
 
-class SelectableRecycleBoxLayout(FocusBehavior, LayoutSelectionBehavior,
+class SelectableRecycleBoxLayout(LayoutSelectionBehavior,
                                  RecycleBoxLayout):
     # Adds selection and focus behaviour to the view.
     print ('selected')
@@ -316,6 +315,7 @@ class PlayerScreen(Screen):
 
         if list_player.is_playing():
             if self.last_index != self.index:
+                player.audio_set_volume(0)
                 list_player.stop()
             else:
                 return  # continue to play the same song
@@ -531,6 +531,7 @@ class RadioPyApp(App):
                 # stop everything and play the alarm song
                 self.BlankSchedule.cancel()
                 self.stop_blank()
+                player.audio_set_volume(0)
                 list_player.stop()
                 list_player.play_item_at_index(alarm.media)
                 player.audio_set_volume(0)
@@ -552,19 +553,30 @@ class RadioPyApp(App):
 
         alarms_list = sorted(alarms_data, key=lambda x: x.timeToWakeUp)
         if alarms_list:
-
             time_left = alarms_list[0].timeToWakeUp - datetime.now()
-            if 0 > time_left.days > 365:
-                self.clockScr.next_alarm = "Next alarm in:\n  {} days, {} hours {} min.".format(
-                        time_left.days, time_left.seconds//3600, time_left.seconds//60%60)
-            elif time_left.days > 365:
-                self.clockScr.next_alarm = "No alarm planned"
-            elif time_left.seconds//3600 > 0:
-                self.clockScr.next_alarm = "Next alarm in:\n {} hours {} min.".format(
-                        time_left.seconds//3600, time_left.seconds//60%60)
+            if alarms_list[0].alarmType == alarms.AlarmTypes.daily:
+                if 0 < time_left.days < 365:
+                    self.clockScr.next_alarm = "Next alarm in:\n  {} days, {} hours {} min.".format(
+                            time_left.days, time_left.seconds//3600, time_left.seconds//60%60)
+                elif time_left.days > 365:
+                    self.clockScr.next_alarm = "No alarm planned"
+                elif time_left.seconds//3600 > 0:
+                    self.clockScr.next_alarm = "Next alarm in:\n {} hours {} min.".format(
+                            time_left.seconds//3600, time_left.seconds//60%60)
+                else:
+                    self.clockScr.next_alarm = "Next alarm in:\n {} min. {:02} sec.".format(
+                            time_left.seconds//60%60, time_left.seconds%60)
             else:
-                self.clockScr.next_alarm = "Next alarm in:\n {} min. {:02} sec.".format(
-                        time_left.seconds//60%60, time_left.seconds%60)
+                if time_left.days > 1:
+                    self.clockScr.next_alarm = "Next alarm in:\n  {} days, {} hours {} min.".format(
+                            time_left.days, time_left.seconds//3600, time_left.seconds//60%60)
+                elif time_left.seconds//3600 > 0:
+                    self.clockScr.next_alarm = "Next alarm in:\n {} hours {} min.".format(
+                            time_left.seconds//3600, time_left.seconds//60%60)
+                else:
+                    self.clockScr.next_alarm = "Next alarm in:\n {} min. {:02} sec.".format(
+                            time_left.seconds//60%60, time_left.seconds%60)
+
 
             # self.clockScr.next_alarm = "Next alarm:\n" + datetime.strftime(alarms_list[0],"%a, %d %b %Y %H:%M:%S")
 
@@ -686,9 +698,11 @@ class RadioPyApp(App):
         save_alarm_db()
 
     def alarm_active(self,index):
-        self.popup = alarms.DisableAlarmPopup()
-        self.popup.index = index
-        self.popup.open()
+        alarm = alarms_data[index]
+        if alarm.alarmType == alarms.AlarmTypes.daily:
+            self.popup = alarms.DisableAlarmPopup()
+            self.popup.index = index
+            self.popup.open()
 
     def alarm_skipped(self,index,skip_next):
         skipped = 0 if skip_next == 'none' else -1 if skip_next == 'all' else int(skip_next)
@@ -746,13 +760,14 @@ class RadioPyApp(App):
         self.rvsAlarmsScr.populate(alarms_data)
         self.swap_screen('alarm_list')
         self.reset_blank()
-        self.rvsAlarmsScr.update(alarms_data[index], index)
+        self.rvsAlarmsScr.update(alarms_data[0], 0)
         save_alarm_db()
 
     def alarm_stop(self):
         for al_index, alarm in enumerate(alarms_data):
             if alarm.state != alarms.AlarmStates.wait:
                 alarms_data[al_index].stop_alarm()
+        player.audio_set_volume(0)
         list_player.stop()
         self.swap_screen('clock')
         self.alarmRun = False
@@ -766,6 +781,7 @@ class RadioPyApp(App):
                 resume_al.append(float(res_al) * 60)
             alarms_data[index].resume_delays = resume_al
         alarms_data[index].resume_alarm()
+        player.audio_set_volume(0)
         list_player.stop()
         self.reset_blank()
         self.blank_screen()

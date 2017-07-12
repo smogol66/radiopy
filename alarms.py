@@ -2,7 +2,6 @@ from kivy.uix.recycleview.views import RecycleDataViewBehavior
 from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import Screen
 from kivy.uix.recycleboxlayout import RecycleBoxLayout
-from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.recycleview.layout import LayoutSelectionBehavior
 from kivy.uix.boxlayout import BoxLayout
 from kivy.properties import ListProperty, NumericProperty, StringProperty, BooleanProperty
@@ -101,6 +100,7 @@ class Alarm:
                 self.state = AlarmStates.end
             if self.alarmType == AlarmTypes.daily:
                 self.state = AlarmStates.wait
+                self.timeToWakeUp = self.alarmDateTime
                 self.update_alarm()
 
         if self.state == AlarmStates.alarm:
@@ -123,9 +123,10 @@ class Alarm:
         self.state = AlarmStates.resumed
 
     def stop_alarm(self):
-        self.alarm_actual_volume = 10
-        self.state = AlarmStates.stop
-        self.update_alarm()
+        if self.state in (AlarmStates.alarm, AlarmStates.resumed):
+            self.alarm_actual_volume = 10
+            self.state = AlarmStates.stop
+            self.resumed = -1
 
     def update_daily_alarm(self, hour, minute, days):
         my_time = datetime.now()
@@ -153,22 +154,30 @@ class Alarm:
         self.alarmType = AlarmTypes.single
 
     def skip_days(self,days):
-        if days >= 0:
-            next_alarm = self.alarmDateTime + timedelta(days=days)
-        else:
-            next_alarm = self.alarmDateTime + timedelta(days=1000)
-        self.timeToWakeUp = copy(next_alarm)
-        self.update_alarm()
+        if self.alarmType== AlarmTypes.daily:
+            if 0 < days < 7:
+                next_alarm = self.timeToWakeUp + timedelta(days=days)
+            elif days == 0:
+                next_alarm = self.alarmDateTime
+            else:
+                next_alarm = self.alarmDateTime + timedelta(days=1000)
+            self.timeToWakeUp = copy(next_alarm)
+            # self.alarmDateTime = copy(next_alarm)
+            self.update_alarm()
 
     def getNextSkipped(self):
-        delay = self.timeToWakeUp - self.alarmDateTime
-        if delay.days > 7:
-            # extend the alarm
-            self.timeToWakeUp +=  timedelta(days=1000)
-        return delay.days if delay.days < 7 else -1
+        if self.alarmType == AlarmTypes.daily:
+            self.update_alarm()
+            delay = self.timeToWakeUp - datetime.now()
+            if delay.days > 7:
+                # extend the alarm
+                self.timeToWakeUp +=  timedelta(days=1000)
+            return delay.days if delay.days < 7 else -1
+        else:
+            return  0
 
 
-class SelectableRecycleBoxLayout(FocusBehavior, LayoutSelectionBehavior,
+class SelectableRecycleBoxLayout(LayoutSelectionBehavior,
                                  RecycleBoxLayout):
     # Adds selection and focus behaviour to the view.
     pass
@@ -217,20 +226,30 @@ class RVSAlarmScreen(Screen):
                 del data_list[:]
                 for alarm in database:
                     print (alarm.alarmType, alarm.alarmDateTime)
-                    skip = alarm.getNextSkipped()
-                    data_list.append({'value': datetime.strftime(alarm.alarmDateTime, '%H:%M'),
-                                      'type': 'daily' if alarm.alarmType == AlarmTypes.daily else 'once',
-                                      'skip_next': 'enabled' if skip == 0 else 'skip {}'.format(skip)
-                                        if skip > 0 else 'paused'}, )
+                    if alarm.alarmType == AlarmTypes.daily:
+                        skip = alarm.getNextSkipped()
+                        data_list.append({'value': datetime.strftime(alarm.alarmDateTime, '%H:%M'),
+                                          'type': 'daily' if alarm.alarmType == AlarmTypes.daily else 'once',
+                                          'skip_next': 'enabled' if skip == 0 else 'skip {}'.format(skip)
+                                            if skip > 0 else 'paused'}, )
+                    else:
+                        data_list.append({'value': datetime.strftime(alarm.alarmDateTime, '%H:%M'),
+                                          'type': 'daily' if alarm.alarmType == AlarmTypes.daily else 'once',
+                                          'skip_next': ''} )
                 self.rv.data = data_list
 
     def update(self, alarm, index):
         if self.rv.data:
             self.rv.data[index]['value'] = alarm.alarmDateTime.strftime('%H:%M') or 'default new value'
             self.rv.data[index]['type'] = 'daily' if alarm.alarmType == AlarmTypes.daily else 'single'
-            skip = alarm.getNextSkipped()
-            self.rv.data[index]['skip_next'] = 'enabled' if skip == 0 else 'skip ' + str(skip) \
-                if skip > 0 else 'paused'
+            if alarm.alarmType == AlarmTypes.daily:
+                skip = alarm.getNextSkipped()
+                self.rv.data[index]['skip_next'] = 'enabled' if skip == 0 else 'skip ' + str(skip) \
+                    if skip > 0 else 'paused'
+                self.rv.data[index]['status'] = True
+            else:
+                self.rv.data[index]['skip_next'] = ''
+                self.rv.data[index]['status'] = False
             self.rv.refresh_from_data()
 
     def remove(self, index):
