@@ -21,6 +21,7 @@ from settingsjson import settings_json
 import alarms
 import pickle
 import vlc
+from time import sleep
 
 
 ALARMS_FILE = 'alarms.dat'
@@ -304,6 +305,7 @@ class PlayerScreen(Screen):
     playVolume = NumericProperty(100)
     time_elapsed = StringProperty('00:00')
     song_progress = NumericProperty(0)
+    nowPlaying = None
     last_index = 0
     duration = 0
     schedule = None
@@ -313,30 +315,39 @@ class PlayerScreen(Screen):
     def on_pre_enter(self):
         self.index = int(self.index)
 
-        if list_player.is_playing():
-            if self.last_index != self.index:
-                player.audio_set_volume(0)
-                list_player.stop()
-            else:
-                return  # continue to play the same song
+        if self.nowPlaying == None or self.nowPlaying != self.index:
+            player.audio_set_volume(0)
+            list_player.stop()
+            self.nowPlaying = None
+        else:
+            player.audio_set_volume(int(self.playVolume))
+            return  # continue to play the same song
+        self.nowPlaying = self.index
         list_player.play_item_at_index(self.index)
         list_player.play()
-
         self.last_index = self.index
         self.labelImage = 'img/pause.png'
         if self.schedule is None:
             self.schedule = Clock.schedule_interval(self.update_time, self.SCHEDULE_DELAY)
+        sleep(0.5) # apparently, vlclib need some time to start playing
+        player.audio_set_volume(int(self.playVolume))
 
     def plays(self):
-        if player.is_playing():
+        if list_player.is_playing():
             player.pause()
             self.labelImage = 'img/play.png'
             Clock.unschedule(self.schedule)
             self.schedule = None
         else:
-            player.play()
-            self.labelImage = 'img/pause.png'
-            self.schedule = Clock.schedule_interval(self.update_time, self.SCHEDULE_DELAY)
+            if self.nowPlaying == None or self.nowPlaying != self.index:
+                player.pause()
+                self.labelImage = 'img/play.png'
+                Clock.unschedule(self.schedule)
+                self.schedule = None
+            else:  # I was playing some thing, let's play it again
+                list_player.play_item_at_index(self.index)
+                self.on_pre_enter()
+                sleep(0.5)
 
     def prev_song(self):
         self.index -= 1
@@ -401,7 +412,10 @@ class PlayerScreen(Screen):
         else:
             self.time_elapsed = "{:02d}:{:02d}:{:02d}".format(h, m, s)
         if not list_player.is_playing():
-            self.next_song()
+            if self.nowPlaying == None or self.nowPlaying != self.index:
+                self.next_song()
+            else:
+                self.plays()
 
 
 class BlankScreen(Screen):
@@ -431,6 +445,7 @@ class RadioPyApp(App):
     last_index = -1
     lastScreen = ''
     alarmRun = False
+    playerVolume = 0
 
     def build(self):
         # update settings
