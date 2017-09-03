@@ -339,9 +339,9 @@ class PlayerScreen(Screen):
             Clock.unschedule(self.schedule)
             self.schedule = None
         else:
+            self.labelImage = 'img/pause.png'
             if self.nowPlaying == None or self.nowPlaying != self.index:
                 player.pause()
-                self.labelImage = 'img/play.png'
                 Clock.unschedule(self.schedule)
                 self.schedule = None
             else:  # I was playing some thing, let's play it again
