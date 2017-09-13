@@ -291,6 +291,10 @@
         Label:
             size_hint_y: 0.1
             text: root.mediaText
+        Label:
+            size_hint_y: 0.2
+            text: "{0:02d}:{1:02d}".format(root.time_hour, root.time_minute)
+            font_size: 50
         BoxLayout:
             Button:
                 text: 'Stop'

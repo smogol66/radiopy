@@ -136,8 +136,10 @@ class Ticks(Widget):
     def update_clock(self, *args):
         global blank_activated
         self.canvas.clear()
+
         with self.canvas:
             time = datetime.now()
+
             if not blank_activated:
                 Color(0.25, 0.25, 0.25)
             else:
@@ -493,6 +495,7 @@ class RadioPyApp(App):
         # setup schedulers
         Clock.schedule_interval(self.clockScr.ticks.update_clock, 0.25)
         self.AlarmSchedule = Clock.schedule_interval(self.check_alarms, 1)
+        Clock.schedule_interval(self.alarmRunScr.update_clock, 1)
 
         sm.bind(on_press=self.reset_blank)
         self.reset_blank()
