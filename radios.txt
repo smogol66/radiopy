@@ -1,4 +1,5 @@
 http://stream.srg-ssr.ch/m/rsj/mp3_128  # Radio Swiss Jazz
+http://www.radioswisspop.ch/live/aacp.m3u
 http://streaming.radio.funradio.fr/fun-1-48-192 # FunRadio
 http://streaming.radio.rtl2.fr/rtl2-1-44-128   # RTL 2
 http://stream.srg-ssr.ch/m/couleur3/mp3_128  # Couleur 3

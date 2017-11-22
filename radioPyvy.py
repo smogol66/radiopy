@@ -18,6 +18,8 @@ from datetime import datetime
 from kivy.config import Config
 from extendedsettings import ExtendedSettings
 from settingsjson import settings_json
+import pprint
+import json
 import alarms
 import pickle
 import vlc
@@ -34,8 +36,8 @@ except ImportError:
 
 
 def save_alarm_db():
-    with open(ALARMS_FILE, 'wb') as f:
-        pickle.dump(alarms_data, f)
+    with open(ALARMS_FILE, 'wb') as af:
+        pickle.dump(alarms_data, af)
 
 
 # global databases
@@ -315,7 +317,7 @@ class PlayerScreen(Screen):
     def on_pre_enter(self):
         self.index = int(self.index)
 
-        if self.nowPlaying == None or self.nowPlaying != self.index:
+        if self.nowPlaying is None or self.nowPlaying != self.index:
             player.audio_set_volume(0)
             list_player.stop()
             self.nowPlaying = None
@@ -553,7 +555,7 @@ class RadioPyApp(App):
                 self.alarmRunScr.index=index
                 self.alarmRunScr.alarmText='Alarm {}'.format(index)
                 self.alarmRunScr.mediaText=song_list[alarm.media]['media_file']
-                self.swap_screen('alarmRun')
+                self.swaplibvlc_screen('alarmRun')
                 self.alarmRun = True
             elif ret == alarms.AlarmStates.alarm and self.alarmRun:
                 self.BlankSchedule.cancel()
@@ -598,6 +600,7 @@ class RadioPyApp(App):
     def build_config(self, config):
         config.setdefaults('Base', {
             'startupvolume': 100,
+            'equalizer': 'Flat',
             'baselamp': 'off',
             'mediapath': base_path,
             'brightness': 255,
@@ -650,6 +653,15 @@ class RadioPyApp(App):
                 self.config.set(section, key, 255)
                 self.config.write()
                 val = 255
+        if key=='equalizer':
+            val = self.config.get(section,'equalizer')
+            data =json.loads(settings_json)
+            index = data[4]['options'].index(val)
+            print('selected index {} as {} preset'.format(index, val))
+            preset = vlc.libvlc_audio_equalizer_new_from_preset(index)
+            vlc.libvlc_media_player_set_equalizer(player, preset)
+
+
 
             self.config.write()
             if rpi:
