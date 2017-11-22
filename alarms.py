@@ -273,6 +273,13 @@ class AlarmRunScreen(Screen):
     index = NumericProperty(-1)
     alarmText = StringProperty('Alarm')
     mediaText = StringProperty('')
+    time_hour = NumericProperty(0)
+    time_minute = NumericProperty(0)
+
+    def update_clock(self, *args):
+        n = datetime.now()
+        self.time_hour = n.hour;
+        self.time_minute = n.minute;
 
 
 class DisableAlarmPopup(Popup):

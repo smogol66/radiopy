@@ -138,8 +138,10 @@ class Ticks(Widget):
     def update_clock(self, *args):
         global blank_activated
         self.canvas.clear()
+
         with self.canvas:
             time = datetime.now()
+
             if not blank_activated:
                 Color(0.25, 0.25, 0.25)
             else:
@@ -341,9 +343,9 @@ class PlayerScreen(Screen):
             Clock.unschedule(self.schedule)
             self.schedule = None
         else:
+            self.labelImage = 'img/pause.png'
             if self.nowPlaying == None or self.nowPlaying != self.index:
                 player.pause()
-                self.labelImage = 'img/play.png'
                 Clock.unschedule(self.schedule)
                 self.schedule = None
             else:  # I was playing some thing, let's play it again
@@ -495,6 +497,7 @@ class RadioPyApp(App):
         # setup schedulers
         Clock.schedule_interval(self.clockScr.ticks.update_clock, 0.25)
         self.AlarmSchedule = Clock.schedule_interval(self.check_alarms, 1)
+        Clock.schedule_interval(self.alarmRunScr.update_clock, 1)
 
         sm.bind(on_press=self.reset_blank)
         self.reset_blank()
