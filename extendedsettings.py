@@ -1,5 +1,5 @@
 # smogol66: modify to create a extendedSettings class
-# Added Class SettingColorPicker on line 501ff
+# Added Class SettingColorPicker on line 501
 # and modified SettingsApp() see line 1306
 
 # source from https://github.com/kivy/kivy/blob/master/kivy/uix/settings.py
@@ -316,6 +316,7 @@ class SettingItem(FloatLayout):
 
     def on_release(self):
         pass
+
 
     def on_value(self, instance, value):
         if not self.section or not self.key:
@@ -991,7 +992,7 @@ class Settings(BoxLayout):
         self.register_type('options', SettingOptions)
         self.register_type('title', SettingTitle)
         self.register_type('path', SettingPath)
-        # self.register_type('colorpicker', SettingColorPicker)
+        self.register_type('colorpicker', SettingColorPicker)
 
     def on_touch_down(self, touch):
         if self.collide_point(*touch.pos):

@@ -57,6 +57,7 @@ except:
 media_list = None
 song_list = []
 blank_activated = False
+disable_blank = False
 
 
 def load_media(folder, scan_folders=False):
@@ -137,6 +138,7 @@ class Ticks(Widget):
 
     def update_clock(self, *args):
         global blank_activated
+
         self.canvas.clear()
 
         with self.canvas:
@@ -333,7 +335,7 @@ class PlayerScreen(Screen):
         self.labelImage = 'img/pause.png'
         if self.schedule is None:
             self.schedule = Clock.schedule_interval(self.update_time, self.SCHEDULE_DELAY)
-        sleep(0.5) # apparently, vlclib need some time to start playing
+        # sleep(0.5) # apparently, vlclib need some time to start playing
         player.audio_set_volume(int(self.playVolume))
 
     def plays(self):
@@ -389,7 +391,7 @@ class PlayerScreen(Screen):
                     self.songArtist = self.media.get_meta(1).decode('utf-8')
             except ValueError:
                 pass  # do not print nothing
-
+            player.audio_set_volume(int(self.playVolume))
             self.duration = self.media.get_duration()
             self.media = None
 
@@ -463,6 +465,14 @@ class RadioPyApp(App):
         else:
             print('call to: sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
 
+        # set audio equalizer
+        equalizer = self.config.get('Base','equalizer')
+        data = json.loads(settings_json)
+        index = data[4]['options'].index(equalizer)
+        print('selected index {} as {} preset'.format(index, val))
+        preset = vlc.libvlc_audio_equalizer_new_from_preset(index)
+        vlc.libvlc_media_player_set_equalizer(player, preset)
+
         # generate GUI
         sm = ScreenManager(transition=SwapTransition(direction='right'))
 
@@ -500,6 +510,7 @@ class RadioPyApp(App):
         Clock.schedule_interval(self.alarmRunScr.update_clock, 1)
 
         sm.bind(on_press=self.reset_blank)
+
         self.reset_blank()
         return sm
 
@@ -508,13 +519,15 @@ class RadioPyApp(App):
 
     def blank_screen(self,*args):
         global blank_activated
-        val = self.config.get('Base','blank_brightness')
-        if rpi:
-            system('sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
-        else:
-            self.lastScreen = self.root.current
-            print('call to: sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
-            # self.root.current = 'blank'
+        global disable_blank
+        if not disable_blank:
+            val = self.config.get('Base','blank_brightness')
+            if rpi:
+                system('sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
+            else:
+                self.lastScreen = self.root.current
+                print('call to: sudo bash -c "echo {} > /sys/class/backlight/rpi_backlight/brightness"'.format(val))
+                # self.root.current = 'blank'
         blank_activated = True
         self.clockScr.blank = True
 
@@ -537,7 +550,6 @@ class RadioPyApp(App):
         self.wake_up()
 
     def stop_blank(self):
-        global blank_activated
         if self.BlankSchedule:
             self.BlankSchedule.cancel()
         self.wake_up()
@@ -558,7 +570,7 @@ class RadioPyApp(App):
                 self.alarmRunScr.index=index
                 self.alarmRunScr.alarmText='Alarm {}'.format(index)
                 self.alarmRunScr.mediaText=song_list[alarm.media]['media_file']
-                self.swaplibvlc_screen('alarmRun')
+                self.swap_screen('alarmRun')
                 self.alarmRun = True
             elif ret == alarms.AlarmStates.alarm and self.alarmRun:
                 self.BlankSchedule.cancel()
