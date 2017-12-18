@@ -24,15 +24,25 @@ import alarms
 import pickle
 import vlc
 from time import sleep
+import Pyro4
+
 
 
 ALARMS_FILE = 'alarms.dat'
+uri = 'PYRO:neo.strip@192.168.66.40:8080'
 
 try:
     import RPi.GPIO
+    import neopixel
     rpi = True
 except ImportError:
     rpi = False
+    def neoColor(red, green, blue, white=0):
+        """Convert the provided red, green, blue color to a 24-bit color value.
+        Each color component should be a value 0-255 where 0 is the lowest intensity
+        and 255 is the highest intensity.
+        """
+        return (white << 24) | (red << 16) | (green << 8) | blue
 
 
 def save_alarm_db():
@@ -452,6 +462,7 @@ class RadioPyApp(App):
     lastScreen = ''
     alarmRun = False
     playerVolume = 0
+    strip = None
 
     def build(self):
         # update settings
@@ -512,6 +523,9 @@ class RadioPyApp(App):
         sm.bind(on_press=self.reset_blank)
 
         self.reset_blank()
+
+        self.strip = Pyro4.Proxy(uri)
+        self.strip.stop()
         return sm
 
     def swap_screen(self, screen):
@@ -572,6 +586,12 @@ class RadioPyApp(App):
                 self.alarmRunScr.mediaText=song_list[alarm.media]['media_file']
                 self.swap_screen('alarmRun')
                 self.alarmRun = True
+                # play led strip at start using the time of the fist resume time
+                val = self.config.get('Base', 'resume_scheme')
+                t_up = int(float(val.split(',')[0]) * 60)
+                if alarm.resumed <0:
+                    self.strip.sunset(up_time_s=t_up)
+
             elif ret == alarms.AlarmStates.alarm and self.alarmRun:
                 self.BlankSchedule.cancel()
                 vol = int(self.config.get('Base','startupvolume')) * 1.2
@@ -653,7 +673,7 @@ class RadioPyApp(App):
             self.config.set(section,key,'False')
             self.config.write()
             if rpi:
-                system('sudo shutdown')
+                system('sudo shutdown -P')
                 App.get_running_app().stop()
             else:
                 App.get_running_app().stop()
@@ -814,6 +834,7 @@ class RadioPyApp(App):
         self.swap_screen('clock')
         self.alarmRun = False
         self.reset_blank()
+        self.strip.stop()
 
     def alarm_resume(self,index):
         if alarms_data:
