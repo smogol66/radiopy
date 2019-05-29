@@ -29,7 +29,7 @@ import Pyro4
 
 
 ALARMS_FILE = 'alarms.dat'
-uri = 'PYRO:neo.strip@192.168.66.40:8080'
+
 
 try:
     import RPi.GPIO
@@ -44,6 +44,10 @@ except ImportError:
         """
         return (white << 24) | (red << 16) | (green << 8) | blue
 
+if rpi:
+    uri = 'PYRO:neo.strip@127.0.0.1:8080'
+else:
+    uri = ""
 
 def save_alarm_db():
     with open(ALARMS_FILE, 'wb') as af:
@@ -524,8 +528,11 @@ class RadioPyApp(App):
 
         self.reset_blank()
 
-        self.strip = Pyro4.Proxy(uri)
-        self.strip.stop()
+        if rpi:
+            self.strip = Pyro4.Proxy(uri)
+            self.strip.stop()
+        else:
+            pass
         return sm
 
     def swap_screen(self, screen):
@@ -590,7 +597,8 @@ class RadioPyApp(App):
                 val = self.config.get('Base', 'resume_scheme')
                 t_up = int(float(val.split(',')[0]) * 60)
                 if alarm.resumed <0:
-                    self.strip.sunset(up_time_s=t_up)
+                    if self.strip:
+                        self.strip.sunset(up_time_s=t_up)
 
             elif ret == alarms.AlarmStates.alarm and self.alarmRun:
                 self.BlankSchedule.cancel()
@@ -834,7 +842,8 @@ class RadioPyApp(App):
         self.swap_screen('clock')
         self.alarmRun = False
         self.reset_blank()
-        self.strip.stop()
+        if self.strip:
+            self.strip.stop()
 
     def alarm_resume(self,index):
         if alarms_data:
